@@ -3,17 +3,17 @@
   This software is licensed under the Apache License version 2.
 -->
 
-# Gravitino Web
+# Gravitino web interface
 
 > **⚠️ Important**
 >
-> Before running commands, you must ensure that you are in the front-end directory `gravitino/web`. If not, run `cd web` first.
+> Before running commands, make sure that you are in the front-end directory `gravitino/web`.
 
 ---
 
-## Getting Started
+## Getting started
 
-### Preparation | Framework & Dependencies
+### Preparation, framework and dependencies
 
 - [Node.js](https://nodejs.org)(v20.x+) & [npm](https://www.npmjs.com/) / [yarn](https://yarnpkg.com/)
 - [React](https://react.dev/)
@@ -22,20 +22,20 @@
 - [tailwindcss](https://tailwindcss.com/)
 - [`react-redux`](https://react-redux.js.org/)
 
-> **TIP**
+> **Tip**
 >
-> Yarn package manager is recommended
+> It's recommended to use the Yarn package manager.
 >
 > **Requirements**
 >
 > Please make sure you use the node’s LTS version
-> Before installing the **node_modules**, make sure you have files starting with a **dot(.eslintrc, .env etc..)**
+> Before installing the **node modules**, make sure files starting with a dot, such as **(.eslintrc, .env etc..)** exist.
 
 ## Installation
 
 ### Development environment
 
-- Run below command in console:
+- Run the following commands in console:
 
 ```bash
 # install dependencies
@@ -49,18 +49,18 @@ yarn install
 yarn server
 ```
 
-- Visit <http://localhost:3000> to check it in your browser. You can start editing the page such as `pages/index.js`. The page auto-updates as you edit the file.
+- Visit <http://localhost:3000> in your browser to view the Gravitino web interface. You can start editing the pages, for example `pages/index.js` and the interface auto-updates as you make changes.
 
-### Development Scripts
+### Development scripts
 
 ```bash
 yarn lint
-# This command runs ESLint to help you inspect the code. If errors are printed, please make modifications based on the provided prompts.
+# Runs ESLint to inspect the code. If any errors are displayed, please make necessary changes.
 ```
 
 ```bash
 yarn prettier:check
-# This command runs Prettier to help you check your code styles. you can manually to fix the code when errors are printed, or use `yarn format` to fix the code with Prettier CLI.
+# run this command to run Prettier and check your code style. You can manually fix any issues, or use yarn format to automatically correct the code using the Prettier CLI.
 ```
 
 ```bash
@@ -69,11 +69,11 @@ yarn format
 
 ```
 
-## Self-hosting Deployment
+## Self-hosting deployment
 
-### Node.js Server
+### Node.js server
 
-Next.js can be deployed to any hosting provider that supports Node.js. Make sure your `package.json` has the `build` and `start` scripts:
+Deploy Next.js to any hosting provider supporting Node.js by ensuring that your `package.json` contains the `build` and `start` scripts.
 
 ```json
 {
@@ -85,7 +85,7 @@ Next.js can be deployed to any hosting provider that supports Node.js. Make sure
 }
 ```
 
-`next build` builds the production application in the `.next` folder. After building, `next start` starts a Node.js server that supports hybrid pages, serving both statically generated and server-side rendered pages.
+`next build` builds the production app in the `.next` folder. After building, `next start` starts a Node.js server that supports hybrid pages, serving both statically generated and server-side rendered pages.
 
 ```bash
 # build production files
@@ -95,11 +95,11 @@ yarn build
 yarn start
 ```
 
-### Static HTML Export
+### Static HTML export
 
-Command `next export` allows you to export your app to static HTML, which can be run standalone without the need of a Node.js server.
+Use the `next export` command to export your app to static HTML, enabling it to run standalone without requiring a Node.js server.
 
-`next export` will generate an `dist` directory, which can be served by any static hosting service.
+The `next export` command generates a `dist` directory, which any static hosting service can serve.
 
 ```bash
 yarn dist
@@ -108,16 +108,16 @@ yarn dist
 
 ## Docker
 
-make sure you have installed the recent version of [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/install/#scenario-two-install-the-compose-plugin). ([Docker Desktop](https://www.docker.com/products/docker-desktop/) already includes Docker Engine, Docker CLI and Docker Compose)
+Make sure you have installed a recent version of [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/install/#scenario-two-install-the-compose-plugin). [Docker Desktop](https://www.docker.com/products/docker-desktop/) already includes Docker Engine, Docker CLI and Docker Compose.
 
 > **⚠️ Important**
 >
-> All commands below are meant to be run in a `macOS` environment. If you are using a different system, you may encounter errors. Please modify the commands according to the system prompts.
-> For example, if you are using `Windows`, replace `${PWD}` with `%cd%`, etc.
+> Run all the following commands in a `macOS` environment. If you are using a different system, you may encounter errors.
+> Please modify the commands according to the system prompts. For example, if you are using `Windows`, replace `${PWD}` with `%cd%`, etc.
 
-Only use Docker to build static `HTML\CSS\JS` files directory
+Only use Docker to build the static `HTML\CSS\JS` files directory.
 
-Run below command in console:
+Run the following command in the console:
 
 ```bash
 # ensure you are in the `web` directory
@@ -126,14 +126,12 @@ docker run -it -p 3000:3000 -v ${PWD}:/web -w /web --name gravitino-web node:20-
 docker run -p 3000:3000 -v ${PWD}:/web --name gravitino-web node:20-slim /bin/bash -c "yarn install && yarn dist"
 ```
 
-This command will run `yarn install` to install the dependencies specified in the `package.json` file and then run `yarn export` to export a static version of the application.
-The exported files will be saved to the `dist` directory inside the container, which is mounted to the `dist` directory in the current directory of the host machine.
-This means that the exported files will be accessible on the host machine after the command is executed.
+Run the command `yarn install` to install the dependencies specified in the `package.json` file, followed by `yarn export` to generate a static version of the app. The process stores the resulting files in the dist directory within the container, linking it to the dist directory in the current directory of the host machine. The exported files are accessible on the host machine after executing this command.
 
-If you also want to start a server to view with demo, please change to the following code:
+If you also want to start a server to view the demo, please use the following command:
 
 ```bash
 docker run -it --rm --name gravitino-web-docker -v ${PWD}:/web -p 3000:3000 -w /web node:20-slim /bin/bash -c "yarn install && yarn server"
 ```
 
-You can access the Gravitino WEB UI by typing <http://localhost:3000> in your browser.
+You can access the Gravitino Web UI by typing <http://localhost:3000> in your browser.
