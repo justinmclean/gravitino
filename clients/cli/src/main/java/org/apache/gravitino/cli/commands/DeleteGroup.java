@@ -19,6 +19,7 @@
 
 package org.apache.gravitino.cli.commands;
 
+import org.apache.gravitino.cli.AreYouSure;
 import org.apache.gravitino.cli.ErrorMessages;
 import org.apache.gravitino.client.GravitinoClient;
 import org.apache.gravitino.exceptions.NoSuchGroupException;
@@ -28,28 +29,37 @@ public class DeleteGroup extends Command {
 
   protected final String metalake;
   protected final String group;
+  protected final boolean force;
 
   /**
    * Delete a group.
    *
    * @param url The URL of the Gravitino server.
    * @param ignoreVersions If true don't check the client/server versions match.
+   * @param force Force operation.
    * @param metalake The name of the metalake.
    * @param group The name of the group.
    */
-  public DeleteGroup(String url, boolean ignoreVersions, String metalake, String group) {
+  public DeleteGroup(
+      String url, boolean ignoreVersions, boolean force, String metalake, String group) {
     super(url, ignoreVersions);
+    this.force = force;
     this.metalake = metalake;
     this.group = group;
   }
 
   /** Delete a group. */
+  @Override
   public void handle() {
     boolean deleted = false;
 
+    if (!AreYouSure.really(force)) {
+      return;
+    }
+
     try {
       GravitinoClient client = buildClient(metalake);
-      deleted = client.removeUser(group);
+      deleted = client.removeGroup(group);
     } catch (NoSuchMetalakeException err) {
       System.err.println(ErrorMessages.UNKNOWN_METALAKE);
       return;
