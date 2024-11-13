@@ -40,7 +40,11 @@ public class GravitinoOptions {
   public static final String USER = "user";
   public static final String GROUP = "group";
   public static final String TAG = "tag";
+<<<<<<< HEAD
   public static final String PRIVILAGE = "privilege";
+=======
+  public static final String ROLE = "role";
+>>>>>>> CLI_Va
   public static final String AUDIT = "audit";
   public static final String FORCE = "force";
 
@@ -63,7 +67,7 @@ public class GravitinoOptions {
     options.addOption(createSimpleOption("a", AUDIT, "display audit information"));
 
     // Create/update options
-    options.addOption(createArgOption("r", RENAME, "new entity name"));
+    options.addOption(createArgOption(null, RENAME, "new entity name"));
     options.addOption(createArgOption("c", COMMENT, "entity comment"));
     options.addOption(createArgOption("P", PROPERTY, "property name"));
     options.addOption(createArgOption("V", VALUE, "property value"));
@@ -73,7 +77,8 @@ public class GravitinoOptions {
     options.addOption(createArgOption("l", USER, "user name"));
     options.addOption(createArgOption("g", GROUP, "group name"));
     options.addOption(createArgOption("t", TAG, "tag name"));
-    options.addOption(createArgOption("p", PRIVILAGE, "privilege decription"));
+    options.addOption(createArgOption(null, PRIVILAGE, "privilege decription"));
+    options.addOption(createArgOption("r", ROLE, "role name"));
 
     // Properties option can have multiple values
     Option properties =
