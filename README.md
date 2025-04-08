@@ -30,7 +30,7 @@
 
 ## Introduction
 
-Apache Gravitino is a high-performance, geo-distributed, and federated metadata lake. It manages metadata directly in different sources, types, and regions, providing users with unified metadata access for data and AI assets.
+Apache Gravitino is the universal catalog for data and AI. Manage your data and AI assets seamlessly with our flexible, unified governance framework and lakehouse federation capabilities.
 
 ![Gravitino Architecture](docs/assets/gravitino-architecture.png)
 
