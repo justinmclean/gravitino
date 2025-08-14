@@ -126,7 +126,8 @@ public class ModelEventDispatcher implements ModelDispatcher {
       String[] aliases,
       String comment,
       Map<String, String> properties)
-      throws NoSuchSchemaException, ModelAlreadyExistsException,
+      throws NoSuchSchemaException,
+          ModelAlreadyExistsException,
           ModelVersionAliasesAlreadyExistException {
     ModelInfo registerModelRequest = new ModelInfo(ident.name(), properties, comment);
     ModelVersionInfo linkModelVersionRequest =

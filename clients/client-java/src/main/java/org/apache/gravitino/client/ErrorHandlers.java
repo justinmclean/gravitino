@@ -191,6 +191,7 @@ public class ErrorHandlers {
   public static Consumer<ErrorResponse> roleErrorHandler() {
     return RoleErrorHandler.INSTANCE;
   }
+
   /**
    * Creates an error handler specific to permission operations.
    *

@@ -30,6 +30,7 @@ import org.apache.gravitino.utils.NameIdentifierUtil;
 @DeveloperApi
 public class CreateRoleFailureEvent extends RoleFailureEvent {
   private final RoleInfo createRoleRequest;
+
   /**
    * Constructs a new {@code CreateRoleFailureEvent} instance.
    *

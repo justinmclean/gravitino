@@ -65,8 +65,10 @@ public class IcebergTable extends BaseTable {
 
   /** The supported parquet file format for Iceberg tables. */
   public static final String ICEBERG_PARQUET_FILE_FORMAT = "parquet";
+
   /** The supported orc file format for Iceberg tables. */
   public static final String ICEBERG_ORC_FILE_FORMAT = "orc";
+
   /** The supported avro file format for Iceberg tables. */
   public static final String ICEBERG_AVRO_FILE_FORMAT = "avro";
 
@@ -213,6 +215,7 @@ public class IcebergTable extends BaseTable {
       return icebergTable;
     }
   }
+
   /**
    * Creates a new instance of {@link Builder}.
    *

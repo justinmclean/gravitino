@@ -97,55 +97,73 @@ public class TableDTO implements Table {
     this.indexes = indexes;
   }
 
-  /** @return The name of the table. */
+  /**
+   * @return The name of the table.
+   */
   @Override
   public String name() {
     return name;
   }
 
-  /** @return The columns of the table. */
+  /**
+   * @return The columns of the table.
+   */
   @Override
   public Column[] columns() {
     return columns;
   }
 
-  /** @return The comment associated with the table. */
+  /**
+   * @return The comment associated with the table.
+   */
   @Override
   public String comment() {
     return comment;
   }
 
-  /** @return The properties associated with the table. */
+  /**
+   * @return The properties associated with the table.
+   */
   @Override
   public Map<String, String> properties() {
     return properties;
   }
 
-  /** @return The audit information for the table. */
+  /**
+   * @return The audit information for the table.
+   */
   @Override
   public AuditDTO auditInfo() {
     return audit;
   }
 
-  /** @return The partitioning of the table. */
+  /**
+   * @return The partitioning of the table.
+   */
   @Override
   public Transform[] partitioning() {
     return partitioning;
   }
 
-  /** @return The sort orders of the table. */
+  /**
+   * @return The sort orders of the table.
+   */
   @Override
   public SortOrder[] sortOrder() {
     return sortOrders;
   }
 
-  /** @return The distribution of the table. */
+  /**
+   * @return The distribution of the table.
+   */
   @Override
   public Distribution distribution() {
     return distribution;
   }
 
-  /** @return The indexes of the table. */
+  /**
+   * @return The indexes of the table.
+   */
   @Override
   public Index[] index() {
     return indexes;
@@ -168,20 +186,28 @@ public class TableDTO implements Table {
   public static class Builder<S extends Builder> {
     /** The name of the table. */
     protected String name;
+
     /** The comment associated with the table. */
     protected String comment;
+
     /** The columns of the table. */
     protected ColumnDTO[] columns;
+
     /** The properties associated with the table. */
     protected Map<String, String> properties;
+
     /** The audit information for the table. */
     protected AuditDTO audit;
+
     /** The distribution of the table. */
     protected SortOrderDTO[] sortOrderDTOs;
+
     /** The distribution of the table. */
     protected DistributionDTO distributionDTO;
+
     /** The partitioning of the table. */
     protected Partitioning[] Partitioning;
+
     /** The indexes of the table. */
     protected IndexDTO[] indexes;
 

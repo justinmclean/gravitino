@@ -50,6 +50,7 @@ import java.util.stream.Collectors;
  */
 public class ChainedAuthorizationProperties extends AuthorizationProperties {
   private static final String PLUGINS_SPLITTER = ",";
+
   /** Chained authorization plugin names */
   public static final String CHAIN_PLUGINS_PROPERTIES_KEY = "authorization.chain.plugins";
 

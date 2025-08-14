@@ -39,6 +39,7 @@ public class CommandContext {
   private boolean urlSet = false;
   private String authEnv;
   private boolean authSet = false;
+
   // Can add more "global" command flags here without any major changes e.g. a guiet flag
 
   /**
@@ -123,6 +124,7 @@ public class CommandContext {
   public CommandLine line() {
     return line;
   }
+
   /**
    * Retrieves the Gravitino URL from the command line options or the GRAVITINO_URL environment
    * variable or the Gravitino config file.

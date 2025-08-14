@@ -48,6 +48,7 @@ public class ModelUpdatesRequest implements RESTRequest {
   public ModelUpdatesRequest() {
     this(null);
   }
+
   /**
    * Validates the request.
    *

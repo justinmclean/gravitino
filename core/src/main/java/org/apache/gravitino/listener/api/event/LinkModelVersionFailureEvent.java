@@ -30,6 +30,7 @@ import org.apache.gravitino.listener.api.info.ModelVersionInfo;
 @DeveloperApi
 public class LinkModelVersionFailureEvent extends ModelFailureEvent {
   private final ModelVersionInfo linkModelVersionRequest;
+
   /**
    * Construct a new {@link LinkModelVersionFailureEvent} instance, capturing information about the
    * failed model version operation.

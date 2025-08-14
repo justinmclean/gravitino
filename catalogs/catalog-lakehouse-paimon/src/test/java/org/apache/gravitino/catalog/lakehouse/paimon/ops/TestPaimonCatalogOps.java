@@ -376,7 +376,8 @@ public class TestPaimonCatalogOps {
   }
 
   private Table alterTable(TableChange... tableChanges)
-      throws Catalog.ColumnAlreadyExistException, Catalog.TableNotExistException,
+      throws Catalog.ColumnAlreadyExistException,
+          Catalog.TableNotExistException,
           Catalog.ColumnNotExistException {
     paimonCatalogOps.alterTable(IDENTIFIER.toString(), tableChanges);
     return paimonCatalogOps.loadTable(IDENTIFIER.toString());

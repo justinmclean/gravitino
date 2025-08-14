@@ -29,6 +29,7 @@ import org.apache.gravitino.utils.MapUtils;
 public class GravitinoClientConfiguration {
   /** The value of messages used to indicate that the configuration should be a positive number. */
   public static final String POSITIVE_NUMBER_ERROR_MSG = "The value must be a positive number";
+
   /** The configuration key prefix for the Gravitino client config. */
   public static final String GRAVITINO_CLIENT_CONFIG_PREFIX = "gravitino.client.";
 

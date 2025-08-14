@@ -57,25 +57,33 @@ public class SchemaDTO implements Schema {
     this.audit = audit;
   }
 
-  /** @return The name of the schema. */
+  /**
+   * @return The name of the schema.
+   */
   @Override
   public String name() {
     return name;
   }
 
-  /** @return The comment associated with the schema. */
+  /**
+   * @return The comment associated with the schema.
+   */
   @Override
   public String comment() {
     return comment;
   }
 
-  /** @return The properties associated with the schema. */
+  /**
+   * @return The properties associated with the schema.
+   */
   @Override
   public Map<String, String> properties() {
     return properties;
   }
 
-  /** @return The audit information for the schema. */
+  /**
+   * @return The audit information for the schema.
+   */
   @Override
   public AuditDTO auditInfo() {
     return audit;
@@ -89,10 +97,13 @@ public class SchemaDTO implements Schema {
   public static class Builder<S extends Builder> {
     /** The name of the schema. */
     protected String name;
+
     /** The comment associated with the schema. */
     protected String comment;
+
     /** The properties associated with the schema. */
     protected Map<String, String> properties;
+
     /** The audit information for the schema. */
     protected AuditDTO audit;
 
@@ -157,7 +168,9 @@ public class SchemaDTO implements Schema {
     }
   }
 
-  /** @return the builder for creating a new instance of SchemaDTO. */
+  /**
+   * @return the builder for creating a new instance of SchemaDTO.
+   */
   public static Builder builder() {
     return new Builder();
   }

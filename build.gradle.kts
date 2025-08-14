@@ -41,17 +41,15 @@ plugins {
   alias(libs.plugins.gradle.extensions)
   alias(libs.plugins.node) apply false
 
-  // Spotless version < 6.19.0 (https://github.com/diffplug/spotless/issues/1819) has an issue
-  // running against JDK21, but we cannot upgrade the spotless to 6.19.0 or later since it only
-  // support JDK11+. So we don't support JDK21 and thrown an exception for now.
-  if (JavaVersion.current() >= JavaVersion.VERSION_1_8 &&
-    JavaVersion.current() <= JavaVersion.VERSION_17
+  // Lastest Spotless version doesn't run on Java 8
+  if (JavaVersion.current() >= JavaVersion.VERSION_11 &&
+    JavaVersion.current() <= JavaVersion.VERSION_23
   ) {
     alias(libs.plugins.spotless)
   } else {
     throw GradleException(
       "The Gravitino Gradle toolchain currently does not support " +
-        "Java version ${JavaVersion.current()}. Please use JDK versions 8 through 17."
+        "Java version ${JavaVersion.current()}. Please use JDK versions 8 through 21.",
     )
   }
 
@@ -64,10 +62,10 @@ plugins {
   alias(libs.plugins.errorprone)
 }
 
-if (extra["jdkVersion"] !in listOf("8", "11", "17")) {
+if (extra["jdkVersion"] !in listOf("8", "11", "17", "21")) {
   throw GradleException(
     "The Gravitino Gradle toolchain currently does not support building with " +
-      "Java version ${extra["jdkVersion"]}. Please use JDK versions 8, 11 or 17."
+      "Java version ${extra["jdkVersion"]}. Please use JDK versions 8, 11, 17 or 21.",
   )
 }
 
@@ -101,7 +99,7 @@ project.extra["extraJvmArgs"] = if (extra["jdkVersion"] in listOf("8", "11")) {
     "--add-opens", "java.base/sun.nio.cs=ALL-UNNAMED",
     "--add-opens", "java.base/sun.security.action=ALL-UNNAMED",
     "--add-opens", "java.base/sun.util.calendar=ALL-UNNAMED",
-    "--add-opens", "java.security.jgss/sun.security.krb5=ALL-UNNAMED"
+    "--add-opens", "java.security.jgss/sun.security.krb5=ALL-UNNAMED",
   )
 }
 
@@ -129,21 +127,18 @@ allprojects {
   plugins.withType<com.diffplug.gradle.spotless.SpotlessPlugin>().configureEach {
     configure<com.diffplug.gradle.spotless.SpotlessExtension> {
       java {
-        // Fix the Google Java Format version to 1.7. Since JDK8 only support Google Java Format
-        // 1.7, which is not compatible with JDK17. We will use a newer version when we upgrade to
-        // JDK17.
-        googleJavaFormat("1.7")
+        googleJavaFormat("1.17.0")
         removeUnusedImports()
         trimTrailingWhitespace()
         replaceRegex(
           "Remove wildcard imports",
           "import\\s+[^\\*\\s]+\\*;(\\r\\n|\\r|\\n)",
-          "$1"
+          "$1",
         )
         replaceRegex(
           "Remove static wildcard imports",
           "import\\s+(?:static\\s+)?[^*\\s]+\\*;(\\r\\n|\\r|\\n)",
-          "$1"
+          "$1",
         )
 
         targetExclude("**/build/**", "**/.pnpm/***")
@@ -215,7 +210,7 @@ allprojects {
       } else {
         throw GradleException(
           "Gravitino integration tests are only compatible with the modes " +
-            "[-PtestMode=embedded] or [-PtestMode=deploy]."
+            "[-PtestMode=embedded] or [-PtestMode=deploy].",
         )
       }
       param.useJUnitPlatform()
@@ -302,8 +297,8 @@ subprojects {
           "-Xlint:finally",
           "-Xlint:overrides",
           "-Xlint:static",
-          "-Werror"
-        )
+          "-Werror",
+        ),
       )
     }
   }
@@ -349,7 +344,7 @@ subprojects {
       "UnsafeReflectiveConstructionCast",
       "UnusedMethod",
       "VariableNameSameAsType",
-      "WaitNotInLoop"
+      "WaitNotInLoop",
     )
   }
 
@@ -458,7 +453,7 @@ subprojects {
 
   configure<SigningExtension> {
     val taskNames = gradle.getStartParameter().getTaskNames()
-    taskNames.forEach() {
+    taskNames.forEach {
       if (it.contains("publishToMavenLocal")) setRequired(false)
     }
 
@@ -571,7 +566,7 @@ tasks.rat {
     "web/web/src/lib/icons/svg/**/*.svg",
     "web/web/src/lib/utils/axios/**/*",
     "web/web/src/types/axios.d.ts",
-    "web/web/yarn.lock"
+    "web/web/yarn.lock",
   )
 
   // Add .gitignore excludes to the Apache Rat exclusion list.
@@ -611,7 +606,7 @@ tasks {
       "copyCliLib",
       ":authorizations:copyLibAndConfig",
       ":iceberg:iceberg-rest-server:copyLibAndConfigs",
-      ":web:web:build"
+      ":web:web:build",
     )
 
     group = "gravitino distribution"
@@ -665,7 +660,7 @@ tasks {
           include(
             "${rootProject.name}-iceberg-rest-server.conf.template",
             "${rootProject.name}-env.sh.template",
-            "log4j2.properties.template"
+            "log4j2.properties.template",
           )
           into("${rootProject.name}-iceberg-rest-server/conf")
         }
@@ -762,7 +757,7 @@ tasks {
     outputs.file(checksumFile)
     doLast {
       checksumFile.get().writeText(
-        serviceOf<ChecksumService>().sha256(archiveFile.get().asFile).toString()
+        serviceOf<ChecksumService>().sha256(archiveFile.get().asFile).toString(),
       )
     }
   }
@@ -778,7 +773,7 @@ tasks {
     outputs.file(checksumFile)
     doLast {
       checksumFile.get().writeText(
-        serviceOf<ChecksumService>().sha256(archiveFile.get().asFile).toString()
+        serviceOf<ChecksumService>().sha256(archiveFile.get().asFile).toString(),
       )
     }
   }
@@ -794,7 +789,7 @@ tasks {
     outputs.file(checksumFile)
     doLast {
       checksumFile.get().writeText(
-        serviceOf<ChecksumService>().sha256(archiveFile.get().asFile).toString()
+        serviceOf<ChecksumService>().sha256(archiveFile.get().asFile).toString(),
       )
     }
   }
@@ -805,7 +800,7 @@ tasks {
   }
 
   register("copySubprojectDependencies", Copy::class) {
-    subprojects.forEach() {
+    subprojects.forEach {
       if (!it.name.startsWith("authorization") &&
         !it.name.startsWith("catalog") &&
         !it.name.startsWith("cli") &&
@@ -835,7 +830,7 @@ tasks {
   }
 
   register("copySubprojectLib", Copy::class) {
-    subprojects.forEach() {
+    subprojects.forEach {
       if (!it.name.startsWith("authorization") &&
         !it.name.startsWith("catalog") &&
         !it.name.startsWith("cli") &&
@@ -875,7 +870,7 @@ tasks {
       ":catalogs:catalog-lakehouse-hudi:copyLibAndConfig",
       ":catalogs:catalog-lakehouse-iceberg:copyLibAndConfig",
       ":catalogs:catalog-lakehouse-paimon:copyLibAndConfig",
-      ":catalogs:catalog-model:copyLibAndConfig"
+      ":catalogs:catalog-model:copyLibAndConfig",
     )
   }
 
@@ -960,7 +955,7 @@ fun printMacDockerTip() {
     println(
       "Tip: Please make sure to use ${redColor}OrbStack$resetColor or execute the " +
         "$redColor`dev/docker/tools/mac-docker-connector.sh`$resetColor script before running" +
-        " the integration test on macOS."
+        " the integration test on macOS.",
     )
   }
 }

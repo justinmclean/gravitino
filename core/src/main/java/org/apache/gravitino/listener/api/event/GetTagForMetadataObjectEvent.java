@@ -30,6 +30,7 @@ import org.apache.gravitino.utils.MetadataObjectUtil;
 @DeveloperApi
 public final class GetTagForMetadataObjectEvent extends TagEvent {
   private final TagInfo tagInfo;
+
   /**
    * Constructs an instance of {@code GetTagForMetadataObjectEvent}.
    *

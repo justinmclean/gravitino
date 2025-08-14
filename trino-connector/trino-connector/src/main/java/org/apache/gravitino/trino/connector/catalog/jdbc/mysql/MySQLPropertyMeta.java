@@ -73,6 +73,7 @@ public class MySQLPropertyMeta implements HasPropertyMeta {
 
   /** Property name for auto-incrementing columns. */
   public static final String AUTO_INCREMENT = "auto_increment";
+
   /** Property name for the default value of columns. */
   public static final String DEFAULT = "default";
 

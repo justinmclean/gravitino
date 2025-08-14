@@ -31,6 +31,7 @@ public class JdbcColumn extends BaseColumn {
   public static class Builder extends BaseColumnBuilder<Builder, JdbcColumn> {
     /** Creates a new instance of {@link Builder}. */
     private Builder() {}
+
     /**
      * Internal method to build a JdbcColumn instance using the provided values.
      *

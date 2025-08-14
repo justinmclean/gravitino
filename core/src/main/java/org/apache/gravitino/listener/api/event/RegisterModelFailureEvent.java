@@ -30,6 +30,7 @@ import org.apache.gravitino.listener.api.info.ModelInfo;
 @DeveloperApi
 public class RegisterModelFailureEvent extends ModelFailureEvent {
   private final ModelInfo registerModelRequest;
+
   /**
    * Construct a {@link RegisterModelFailureEvent} instance, capturing detailed information about
    * the failed attempt to register a model.

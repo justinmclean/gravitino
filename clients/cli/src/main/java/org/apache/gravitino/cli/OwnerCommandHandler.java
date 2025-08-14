@@ -62,6 +62,7 @@ public class OwnerCommandHandler extends CommandHandler {
     this.entityName = name.getName();
     this.entity = entity;
   }
+
   /** Handles the command execution logic based on the provided command. */
   @Override
   protected void handle() {

@@ -85,14 +85,14 @@ tasks {
         "powershell",
         "-Command",
         "\$env:UV_INSTALL_DIR='${uvInstallDir.absolutePath}'; " +
-          "irm https://astral.sh/uv/install.ps1 | iex"
+          "irm https://astral.sh/uv/install.ps1 | iex",
       )
     } else {
       commandLine(
         "/bin/sh",
         "-c",
         "export UV_INSTALL_DIR=${uvInstallDir.absolutePath}; " +
-          "curl -LsSf https://astral.sh/uv/install.sh | sh"
+          "curl -LsSf https://astral.sh/uv/install.sh | sh",
       )
     }
 

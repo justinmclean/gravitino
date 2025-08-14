@@ -95,7 +95,7 @@ jcstress {
    - quick : takes tens of seconds
    - default : takes minutes, good number of iterations
    - tough : takes tens of minutes, large number of iterations, most reliable
-    */
+   */
   mode = "default"
   jvmArgsPrepend = "-Djdk.stdout.sync=true"
 }

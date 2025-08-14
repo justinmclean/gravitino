@@ -38,6 +38,7 @@ import org.apache.gravitino.exceptions.NonEmptyEntityException;
 public class CatalogNormalizeDispatcher implements CatalogDispatcher {
   private static final Set<String> RESERVED_WORDS =
       ImmutableSet.of(MetadataObjects.METADATA_OBJECT_RESERVED_NAME, SYSTEM_CATALOG_RESERVED_NAME);
+
   /**
    * Regular expression explanation:
    *

@@ -29,10 +29,13 @@ public class ADLSTokenCredential implements Credential {
 
   /** ADLS token credential type. */
   public static final String ADLS_TOKEN_CREDENTIAL_TYPE = "adls-token";
+
   /** ADLS base domain */
   public static final String ADLS_DOMAIN = "dfs.core.windows.net";
+
   /** ADLS storage account name */
   public static final String GRAVITINO_AZURE_STORAGE_ACCOUNT_NAME = "azure-storage-account-name";
+
   /** ADLS SAS token used to access ADLS data. */
   public static final String GRAVITINO_ADLS_SAS_TOKEN = "adls-sas-token";
 

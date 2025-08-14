@@ -27,7 +27,9 @@ import org.apache.gravitino.annotation.Evolving;
 @Evolving
 public interface PropertiesMetadata {
 
-  /** @return the defined property entries for the entity. */
+  /**
+   * @return the defined property entries for the entity.
+   */
   Map<String, PropertyEntry<?>> propertyEntries();
 
   /**
@@ -162,6 +164,7 @@ public interface PropertiesMetadata {
 
     throw new IllegalArgumentException("Property is not defined: " + propertyName);
   }
+
   /**
    * Get the property prefix entry of the property. If there are multiple property prefix entries
    * matching the property name, the longest prefix entry will be returned.

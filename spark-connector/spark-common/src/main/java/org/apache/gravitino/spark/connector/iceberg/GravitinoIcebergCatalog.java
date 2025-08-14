@@ -191,7 +191,9 @@ public class GravitinoIcebergCatalog extends BaseCatalog
   }
 
   private boolean isSystemNamespace(String[] namespace)
-      throws NoSuchMethodException, InvocationTargetException, IllegalAccessException,
+      throws NoSuchMethodException,
+          InvocationTargetException,
+          IllegalAccessException,
           ClassNotFoundException {
     Class<?> baseCatalog = Class.forName("org.apache.iceberg.spark.BaseCatalog");
     Method isSystemNamespace = baseCatalog.getDeclaredMethod("isSystemNamespace", String[].class);

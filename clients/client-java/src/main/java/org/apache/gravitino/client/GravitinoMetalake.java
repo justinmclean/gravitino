@@ -1033,7 +1033,9 @@ public class GravitinoMetalake extends MetalakeDTO
    * @throws RuntimeException If granting privileges to a role encounters storage issues.
    */
   public Role grantPrivilegesToRole(String role, MetadataObject object, List<Privilege> privileges)
-      throws NoSuchRoleException, NoSuchMetadataObjectException, NoSuchMetalakeException,
+      throws NoSuchRoleException,
+          NoSuchMetadataObjectException,
+          NoSuchMetalakeException,
           IllegalPrivilegeException {
     Set<Privilege> privilegeSet = Sets.newHashSet(privileges);
     return grantPrivilegesToRole(role, object, privilegeSet);
@@ -1054,7 +1056,9 @@ public class GravitinoMetalake extends MetalakeDTO
    * @throws RuntimeException If granting privileges to a role encounters storage issues.
    */
   public Role grantPrivilegesToRole(String role, MetadataObject object, Set<Privilege> privileges)
-      throws NoSuchRoleException, NoSuchMetadataObjectException, NoSuchMetalakeException,
+      throws NoSuchRoleException,
+          NoSuchMetadataObjectException,
+          NoSuchMetalakeException,
           IllegalPrivilegeException {
     PrivilegeGrantRequest request =
         new PrivilegeGrantRequest(DTOConverters.toPrivileges(privileges));
@@ -1098,7 +1102,9 @@ public class GravitinoMetalake extends MetalakeDTO
   @Deprecated
   public Role revokePrivilegesFromRole(
       String role, MetadataObject object, List<Privilege> privileges)
-      throws NoSuchRoleException, NoSuchMetadataObjectException, NoSuchMetalakeException,
+      throws NoSuchRoleException,
+          NoSuchMetadataObjectException,
+          NoSuchMetalakeException,
           IllegalPrivilegeException {
     Set<Privilege> privilegeSet = Sets.newHashSet(privileges);
     return revokePrivilegesFromRole(role, object, privilegeSet);
@@ -1120,7 +1126,9 @@ public class GravitinoMetalake extends MetalakeDTO
    */
   public Role revokePrivilegesFromRole(
       String role, MetadataObject object, Set<Privilege> privileges)
-      throws NoSuchRoleException, NoSuchMetadataObjectException, NoSuchMetalakeException,
+      throws NoSuchRoleException,
+          NoSuchMetadataObjectException,
+          NoSuchMetalakeException,
           IllegalPrivilegeException {
     PrivilegeRevokeRequest request =
         new PrivilegeRevokeRequest(DTOConverters.toPrivileges(privileges));
@@ -1394,7 +1402,9 @@ public class GravitinoMetalake extends MetalakeDTO
     return super.equals(that);
   }
 
-  /** @return the builder for creating a new instance of GravitinoMetaLake. */
+  /**
+   * @return the builder for creating a new instance of GravitinoMetaLake.
+   */
   public static Builder builder() {
     return new Builder();
   }

@@ -27,6 +27,7 @@ import org.apache.gravitino.listener.api.info.MetalakeInfo;
 @DeveloperApi
 public final class CreateMetalakeEvent extends MetalakeEvent {
   private final MetalakeInfo createdMetalakeInfo;
+
   /**
    * Constructs an instance of {@code CreateMetalakeEvent}, capturing essential details about the
    * successful creation of a metalake.

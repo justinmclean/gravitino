@@ -81,6 +81,7 @@ public class HTTPClient implements RESTClient {
 
   // Handler to be executed before connecting to the server.
   private final Runnable beforeConnectHandler;
+
   // Handler status
   enum HandlerStatus {
     // The handler has not been executed yet.

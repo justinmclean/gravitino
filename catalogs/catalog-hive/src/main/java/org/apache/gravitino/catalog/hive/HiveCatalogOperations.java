@@ -291,6 +291,7 @@ public class HiveCatalogOperations implements CatalogOperations, SupportsSchemas
     return (boolean)
         propertiesMetadata.catalogPropertiesMetadata().getOrDefault(conf, LIST_ALL_TABLES);
   }
+
   /** Closes the Hive catalog and releases the associated client pool. */
   @Override
   public void close() {

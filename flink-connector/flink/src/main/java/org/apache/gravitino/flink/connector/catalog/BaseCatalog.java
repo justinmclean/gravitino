@@ -406,7 +406,9 @@ public abstract class BaseCatalog extends AbstractCatalog {
   @Override
   public List<CatalogPartitionSpec> listPartitions(
       ObjectPath tablePath, CatalogPartitionSpec partitionSpec)
-      throws TableNotExistException, TableNotPartitionedException, PartitionSpecInvalidException,
+      throws TableNotExistException,
+          TableNotPartitionedException,
+          PartitionSpecInvalidException,
           CatalogException {
     return realCatalog().listPartitions(tablePath, partitionSpec);
   }
@@ -436,8 +438,11 @@ public abstract class BaseCatalog extends AbstractCatalog {
       CatalogPartitionSpec catalogPartitionSpec,
       CatalogPartition catalogPartition,
       boolean b)
-      throws TableNotExistException, TableNotPartitionedException, PartitionSpecInvalidException,
-          PartitionAlreadyExistsException, CatalogException {
+      throws TableNotExistException,
+          TableNotPartitionedException,
+          PartitionSpecInvalidException,
+          PartitionAlreadyExistsException,
+          CatalogException {
     throw new UnsupportedOperationException();
   }
 

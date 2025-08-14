@@ -29,8 +29,10 @@ public class AzureAccountKeyCredential implements Credential {
 
   /** Azure account key credential type. */
   public static final String AZURE_ACCOUNT_KEY_CREDENTIAL_TYPE = "azure-account-key";
+
   /** Azure storage account name */
   public static final String GRAVITINO_AZURE_STORAGE_ACCOUNT_NAME = "azure-storage-account-name";
+
   /** Azure storage account key */
   public static final String GRAVITINO_AZURE_STORAGE_ACCOUNT_KEY = "azure-storage-account-key";
 

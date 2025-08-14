@@ -45,6 +45,7 @@ final class BaseSchemaExtension extends BaseSchema {
       return schema;
     }
   }
+
   /**
    * Creates a new instance of {@link Builder}.
    *
