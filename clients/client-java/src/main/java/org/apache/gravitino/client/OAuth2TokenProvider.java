@@ -94,6 +94,7 @@ public abstract class OAuth2TokenProvider implements AuthDataProvider {
       implements Builder<SELF, T> {
 
     private String uri;
+
     /** The HTTP client used to request the access token from the authorization server. */
     protected HTTPClient client;
 

@@ -115,7 +115,8 @@ public interface ModelCatalog {
       String[] aliases,
       String comment,
       Map<String, String> properties)
-      throws NoSuchSchemaException, ModelAlreadyExistsException,
+      throws NoSuchSchemaException,
+          ModelAlreadyExistsException,
           ModelVersionAliasesAlreadyExistException {
     Model model = registerModel(ident, comment, properties);
     linkModelVersion(ident, uris, aliases, comment, properties);

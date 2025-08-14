@@ -36,16 +36,21 @@ public class VXDataObject implements java.io.Serializable {
 
   /** Id of the data */
   protected Long id;
+
   /** Date when this data was created */
   @JsonSerialize(using = JsonDateSerializer.class)
   protected Date createDate;
+
   /** Date when this data was updated */
   @JsonSerialize(using = JsonDateSerializer.class)
   protected Date updateDate;
+
   /** Owner */
   protected String owner;
+
   /** Updated By */
   protected String updatedBy;
+
   /** Default constructor. This will set all the attributes to default value. */
   public VXDataObject() {}
 

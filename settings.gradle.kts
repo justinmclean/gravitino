@@ -17,7 +17,7 @@
  * under the License.
  */
 plugins {
-  id("org.gradle.toolchains.foojay-resolver-convention") version("0.7.0")
+  id("org.gradle.toolchains.foojay-resolver-convention") version ("0.7.0")
 }
 
 rootProject.name = "gravitino"
@@ -38,7 +38,7 @@ include(
   "catalogs:catalog-jdbc-mysql",
   "catalogs:catalog-jdbc-postgresql",
   "catalogs:catalog-jdbc-oceanbase",
-  "catalogs:catalog-jdbc-starrocks"
+  "catalogs:catalog-jdbc-starrocks",
 )
 include("catalogs:catalog-fileset")
 include("catalogs:catalog-kafka")
@@ -49,7 +49,7 @@ include(
   "clients:filesystem-hadoop3",
   "clients:filesystem-hadoop3-runtime",
   "clients:client-python",
-  "clients:cli"
+  "clients:cli",
 )
 if (gradle.startParameter.projectProperties["enableFuse"]?.toBoolean() == true) {
   include("clients:filesystem-fuse")

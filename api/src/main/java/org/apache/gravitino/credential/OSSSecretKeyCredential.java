@@ -29,8 +29,10 @@ public class OSSSecretKeyCredential implements Credential {
 
   /** OSS secret key credential type. */
   public static final String OSS_SECRET_KEY_CREDENTIAL_TYPE = "oss-secret-key";
+
   /** The static access key ID used to access OSS data. */
   public static final String GRAVITINO_OSS_STATIC_ACCESS_KEY_ID = "oss-access-key-id";
+
   /** The static secret access key used to access OSS data. */
   public static final String GRAVITINO_OSS_STATIC_SECRET_ACCESS_KEY = "oss-secret-access-key";
 

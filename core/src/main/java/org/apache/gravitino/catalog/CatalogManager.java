@@ -116,7 +116,9 @@ public class CatalogManager implements CatalogDispatcher, Closeable {
   private static final Logger LOG = LoggerFactory.getLogger(CatalogManager.class);
 
   public void checkCatalogInUse(EntityStore store, NameIdentifier ident)
-      throws NoSuchMetalakeException, NoSuchCatalogException, CatalogNotInUseException,
+      throws NoSuchMetalakeException,
+          NoSuchCatalogException,
+          CatalogNotInUseException,
           MetalakeNotInUseException {
     NameIdentifier metalakeIdent = NameIdentifier.of(ident.namespace().levels());
     checkMetalake(metalakeIdent, store);

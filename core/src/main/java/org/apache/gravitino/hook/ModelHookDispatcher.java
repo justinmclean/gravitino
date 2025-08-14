@@ -157,7 +157,8 @@ public class ModelHookDispatcher implements ModelDispatcher {
       String[] aliases,
       String comment,
       Map<String, String> properties)
-      throws NoSuchSchemaException, ModelAlreadyExistsException,
+      throws NoSuchSchemaException,
+          ModelAlreadyExistsException,
           ModelVersionAliasesAlreadyExistException {
     // Check whether the current user exists or not
     AuthorizationUtils.checkCurrentUser(

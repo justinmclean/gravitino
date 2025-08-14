@@ -26,6 +26,7 @@ import java.util.Map;
 public interface Credential {
   /** Credential type in the credential. */
   String CREDENTIAL_TYPE = "credential-type";
+
   /** Credential expire time in ms since the epoch. */
   String EXPIRE_TIME_IN_MS = "expire-time-in-ms";
 

@@ -126,7 +126,7 @@ tasks.register<JavaExec>("TrinoTest") {
   if (JavaVersion.current() > JavaVersion.VERSION_1_8) {
     jvmArgs = listOf(
       "--add-opens",
-      "java.base/java.lang=ALL-UNNAMED"
+      "java.base/java.lang=ALL-UNNAMED",
     )
   }
 

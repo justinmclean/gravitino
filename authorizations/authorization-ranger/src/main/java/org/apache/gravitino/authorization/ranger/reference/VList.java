@@ -27,14 +27,19 @@ public abstract class VList implements java.io.Serializable {
 
   /** Start index for the result. */
   @Setter protected int startIndex;
+
   /** Page size used for the result. */
   @Setter protected int pageSize;
+
   /** Total records in the database for the given search conditions. */
   @Setter protected long totalCount;
+
   /** Number of rows returned for the search condition. */
   @Setter protected int resultSize;
+
   /** Sort type. Either desc or asc. */
   @Setter protected String sortType;
+
   /** Comma separated list of the fields for sorting. */
   @Setter protected String sortBy;
 

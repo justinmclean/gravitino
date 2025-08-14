@@ -731,17 +731,23 @@ public interface TableChange {
       this.fieldNames = fieldNames;
     }
 
-    /** @return The type of the index. */
+    /**
+     * @return The type of the index.
+     */
     public IndexType getType() {
       return type;
     }
 
-    /** @return The name of the index. */
+    /**
+     * @return The name of the index.
+     */
     public String getName() {
       return name;
     }
 
-    /** @return The field names of the index. */
+    /**
+     * @return The field names of the index.
+     */
     public String[][] getFieldNames() {
       return fieldNames;
     }
@@ -782,12 +788,16 @@ public interface TableChange {
       this.ifExists = ifExists;
     }
 
-    /** @return The name of the index to be deleted. */
+    /**
+     * @return The name of the index to be deleted.
+     */
     public String getName() {
       return name;
     }
 
-    /** @return If true, silence the error if index does not exist during drop. */
+    /**
+     * @return If true, silence the error if index does not exist during drop.
+     */
     public boolean isIfExists() {
       return ifExists;
     }
@@ -812,7 +822,9 @@ public interface TableChange {
    */
   interface ColumnPosition {
 
-    /** @return The first position of ColumnPosition instance. */
+    /**
+     * @return The first position of ColumnPosition instance.
+     */
     static ColumnPosition first() {
       return First.INSTANCE;
     }
@@ -827,7 +839,9 @@ public interface TableChange {
       return new After(column);
     }
 
-    /** @return The default position of ColumnPosition instance. */
+    /**
+     * @return The default position of ColumnPosition instance.
+     */
     static ColumnPosition defaultPos() {
       return Default.INSTANCE;
     }

@@ -349,6 +349,7 @@ class FilesetCatalog extends BaseSchemaCatalog
   static class Builder extends CatalogDTO.Builder<Builder> {
     /** The REST client to send the requests. */
     private RESTClient restClient;
+
     /** The namespace of the catalog */
     private Namespace namespace;
 

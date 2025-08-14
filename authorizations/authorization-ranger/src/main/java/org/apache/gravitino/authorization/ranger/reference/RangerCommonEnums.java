@@ -22,8 +22,10 @@ package org.apache.gravitino.authorization.ranger.reference;
 public class RangerCommonEnums {
   /** IS_VISIBLE is an element of enum VisibilityStatus. Its value is "IS_VISIBLE". */
   public static final int IS_VISIBLE = 1;
+
   /** STATUS_ENABLED is an element of enum ActiveStatus. Its value is "STATUS_ENABLED". */
   public static final int STATUS_ENABLED = 1;
+
   /** internal group */
   public static final int GROUP_INTERNAL = 0;
 }

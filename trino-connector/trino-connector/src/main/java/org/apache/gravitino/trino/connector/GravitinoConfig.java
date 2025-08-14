@@ -35,20 +35,26 @@ public class GravitinoConfig {
   // Trino config keys
   /** The Trino discovery URI. */
   private static final String TRINO_DISCOVERY_URI = "discovery.uri";
+
   /** The Trino catalog config directory. */
   private static final String TRINO_CATALOG_CONFIG_DIR = "catalog.config-dir";
+
   /** The Trino plugin bundles. */
   public static final String TRINO_PLUGIN_BUNDLES = "plugin.bundles";
+
   /** The Trino catalog store. */
   public static final String TRINO_CATALOG_STORE = "catalog.store";
+
   /** The Trino catalog management. */
   public static final String TRINO_CATALOG_MANAGEMENT = "catalog.management";
 
   // Trino config default value
   /** The Trino catalog config directory default value. */
   private static final String TRINO_CATALOG_CONFIG_DIR_DEFAULT_VALUE = "etc/catalog";
+
   /** The Trino catalog store default value. */
   public static final String TRINO_CATALOG_STORE_DEFAULT_VALUE = "file";
+
   /** The Trino catalog management default value. */
   public static final String TRINO_CATALOG_MANAGEMENT_DEFAULT_VALUE = "static";
 
@@ -59,6 +65,7 @@ public class GravitinoConfig {
   // Gravitino config keys
   /** The Gravitino dynamic connector. */
   public static final String GRAVITINO_DYNAMIC_CONNECTOR = "__gravitino.dynamic.connector";
+
   /** The Gravitino dynamic connector catalog config. */
   public static final String GRAVITINO_DYNAMIC_CONNECTOR_CATALOG_CONFIG =
       "__gravitino.dynamic.connector.catalog.config";
@@ -74,7 +81,9 @@ public class GravitinoConfig {
   private static final ConfigEntry GRAVITINO_METALAKE =
       new ConfigEntry("gravitino.metalake", "The metalake name for used", "", true);
 
-  /** @deprecated Please use {@code gravitino.use-single-metalake} instead. */
+  /**
+   * @deprecated Please use {@code gravitino.use-single-metalake} instead.
+   */
   @Deprecated
   @SuppressWarnings("UnusedVariable")
   private static final ConfigEntry GRAVITINO_SIMPLIFY_CATALOG_NAMES =

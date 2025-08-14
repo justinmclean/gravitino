@@ -23,7 +23,9 @@ import java.util.Map;
 /** The interface of the content of the policy. */
 public interface PolicyContent {
 
-  /** @return The additional properties of the policy. */
+  /**
+   * @return The additional properties of the policy.
+   */
   Map<String, String> properties();
 
   /**

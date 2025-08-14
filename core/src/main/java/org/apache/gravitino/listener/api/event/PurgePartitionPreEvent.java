@@ -35,6 +35,7 @@ public class PurgePartitionPreEvent extends PartitionPreEvent {
   public String partitionName() {
     return partitionName;
   }
+
   /**
    * Returns the type of operation.
    *

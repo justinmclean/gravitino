@@ -23,10 +23,14 @@ import org.apache.gravitino.annotation.Evolving;
 /** An interface representing all data types supported by Apache Gravitino. */
 @Evolving
 public interface Type {
-  /** @return The generic name of the type. */
+  /**
+   * @return The generic name of the type.
+   */
   Name name();
 
-  /** @return A readable string representation for the type. */
+  /**
+   * @return A readable string representation for the type.
+   */
   String simpleString();
 
   /** The root type name of this type. */
@@ -112,11 +116,13 @@ public interface Type {
      * should be converted to the catalog's default precision.
      */
     protected static final int DATE_TIME_PRECISION_NOT_SET = -1;
+
     /**
      * Represents the minimum precision range for timestamp, time and other date/time types. The
      * minimum precision is 0, which means second-level precision.
      */
     protected static final int MIN_ALLOWED_PRECISION = 0;
+
     /**
      * Represents the maximum precision allowed for timestamp, time and other date/time types. The
      * maximum precision is 12, which means picosecond-level precision.
@@ -134,12 +140,16 @@ public interface Type {
   abstract class IntegralType extends NumericType {
     private final boolean signed;
 
-    /** @param signed or unsigned of the integer type. */
+    /**
+     * @param signed or unsigned of the integer type.
+     */
     public IntegralType(boolean signed) {
       this.signed = signed;
     }
 
-    /** @return True if the integer type has signed, false otherwise. */
+    /**
+     * @return True if the integer type has signed, false otherwise.
+     */
     public boolean signed() {
       return signed;
     }

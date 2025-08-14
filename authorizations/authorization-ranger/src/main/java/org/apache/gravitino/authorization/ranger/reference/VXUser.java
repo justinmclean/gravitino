@@ -35,18 +35,25 @@ public class VXUser extends VXDataObject implements java.io.Serializable {
 
   /** Name. */
   protected String name;
+
   /** First Name. */
   protected String firstName;
+
   /** Last Name. */
   protected String lastName;
+
   /** Email address. */
   protected String emailAddress;
+
   /** Password. */
   protected String password = "rangerR0cks!";
+
   /** Description */
   protected String description;
+
   /** Id of the credential store */
   protected Long credStoreId;
+
   /** List of group ids for this user. */
   protected Collection<Long> groupIdList;
 
@@ -54,10 +61,13 @@ public class VXUser extends VXDataObject implements java.io.Serializable {
   protected int status = RangerCommonEnums.STATUS_ENABLED;
   protected Integer isVisible = RangerCommonEnums.IS_VISIBLE;
   protected int userSource;
+
   /** List of roles for this user */
   protected Collection<String> userRoleList;
+
   /** Additional store attributes. */
   protected String otherAttributes;
+
   /** Sync Source */
   protected String syncSource;
 

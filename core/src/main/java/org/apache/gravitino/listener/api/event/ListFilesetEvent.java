@@ -29,6 +29,7 @@ import org.apache.gravitino.annotation.DeveloperApi;
 @DeveloperApi
 public final class ListFilesetEvent extends FilesetEvent {
   private final Namespace namespace;
+
   /**
    * Constructs a new {@code ListFilesetEvent}.
    *

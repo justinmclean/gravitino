@@ -197,6 +197,7 @@ public class TableCommandHandler extends CommandHandler {
         .validate()
         .handle();
   }
+
   /** Handles the "PROPERTIES" command. */
   private void handlePropertiesCommand() {
     gravitinoCommandLine

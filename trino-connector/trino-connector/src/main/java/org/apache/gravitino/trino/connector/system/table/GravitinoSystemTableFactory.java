@@ -30,6 +30,7 @@ import org.apache.gravitino.trino.connector.catalog.CatalogConnectorManager;
 public class GravitinoSystemTableFactory {
 
   private final CatalogConnectorManager catalogConnectorManager;
+
   /** Map of all registered system tables, keyed by their schema-qualified names. */
   public static final Map<SchemaTableName, GravitinoSystemTable> SYSTEM_TABLES = new HashMap<>();
 

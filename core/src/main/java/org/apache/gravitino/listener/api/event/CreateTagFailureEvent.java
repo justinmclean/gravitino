@@ -30,6 +30,7 @@ import org.apache.gravitino.utils.NameIdentifierUtil;
 @DeveloperApi
 public class CreateTagFailureEvent extends TagFailureEvent {
   private final TagInfo tagInfo;
+
   /**
    * Constructs a new {@code CreateTagFailureEvent} instance.
    *

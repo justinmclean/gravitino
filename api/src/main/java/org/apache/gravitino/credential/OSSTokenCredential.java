@@ -29,10 +29,13 @@ public class OSSTokenCredential implements Credential {
 
   /** OSS token credential type. */
   public static final String OSS_TOKEN_CREDENTIAL_TYPE = "oss-token";
+
   /** OSS access key ID used to access OSS data. */
   public static final String GRAVITINO_OSS_SESSION_ACCESS_KEY_ID = "oss-access-key-id";
+
   /** OSS secret access key used to access OSS data. */
   public static final String GRAVITINO_OSS_SESSION_SECRET_ACCESS_KEY = "oss-secret-access-key";
+
   /** OSS security token. */
   public static final String GRAVITINO_OSS_TOKEN = "oss-security-token";
 

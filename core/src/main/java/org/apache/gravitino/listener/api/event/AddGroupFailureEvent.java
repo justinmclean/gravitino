@@ -29,6 +29,7 @@ import org.apache.gravitino.utils.NameIdentifierUtil;
 @DeveloperApi
 public class AddGroupFailureEvent extends GroupFailureEvent {
   private final String groupName;
+
   /**
    * Creates a new instance of {@code AddGroupFailureEvent}.
    *

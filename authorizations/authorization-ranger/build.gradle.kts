@@ -145,7 +145,7 @@ tasks.test {
     ":catalogs:catalog-lakehouse-paimon:jar",
     ":catalogs:catalog-lakehouse-paimon:runtimeJars",
     ":catalogs:catalog-fileset:jar",
-    ":catalogs:catalog-fileset:runtimeJars"
+    ":catalogs:catalog-fileset:runtimeJars",
   )
 
   val skipITs = project.hasProperty("skipITs")

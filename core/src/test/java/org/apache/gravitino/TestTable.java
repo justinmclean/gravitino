@@ -57,6 +57,7 @@ public class TestTable extends BaseTable {
       return table;
     }
   }
+
   /**
    * Creates a new instance of {@link Builder}.
    *

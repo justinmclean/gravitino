@@ -112,6 +112,7 @@ public class HiveSchema extends BaseSchema {
       return hiveSchema;
     }
   }
+
   /**
    * Creates a new instance of {@link Builder}.
    *

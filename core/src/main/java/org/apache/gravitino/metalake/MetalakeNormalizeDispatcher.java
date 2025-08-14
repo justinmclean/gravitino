@@ -39,6 +39,7 @@ import org.apache.gravitino.exceptions.NonEmptyEntityException;
 
 public class MetalakeNormalizeDispatcher implements MetalakeDispatcher {
   private static final Set<String> RESERVED_WORDS = ImmutableSet.of(SYSTEM_METALAKE_RESERVED_NAME);
+
   /**
    * Regular expression explanation:
    *

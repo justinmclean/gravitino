@@ -31,6 +31,7 @@ public class IcebergColumn extends BaseColumn {
   public static class Builder extends BaseColumnBuilder<Builder, IcebergColumn> {
     /** Creates a new instance of {@link Builder}. */
     private Builder() {}
+
     /**
      * Internal method to build a IcebergColumn instance using the provided values.
      *

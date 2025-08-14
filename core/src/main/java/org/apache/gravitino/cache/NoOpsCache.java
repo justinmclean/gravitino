@@ -31,6 +31,7 @@ import org.apache.gravitino.SupportsRelationOperations;
 /** A cache implementation that does not cache anything. */
 public class NoOpsCache extends BaseEntityCache {
   private final ReentrantLock opLock = new ReentrantLock();
+
   /**
    * Constructs a new {@link BaseEntityCache} instance.
    *

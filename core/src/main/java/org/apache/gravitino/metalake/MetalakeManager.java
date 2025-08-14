@@ -151,6 +151,7 @@ public class MetalakeManager implements MetalakeDispatcher, Closeable {
       throw new RuntimeException(ioe);
     }
   }
+
   /**
    * Loads a Metalake.
    *

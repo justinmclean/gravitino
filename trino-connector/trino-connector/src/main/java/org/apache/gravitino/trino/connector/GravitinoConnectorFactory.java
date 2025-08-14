@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
 public class GravitinoConnectorFactory implements ConnectorFactory {
 
   private static final Logger LOG = LoggerFactory.getLogger(GravitinoConnectorFactory.class);
+
   /** The default connector name. */
   public static final String DEFAULT_CONNECTOR_NAME = "gravitino";
 

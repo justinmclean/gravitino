@@ -34,6 +34,7 @@ import org.apache.gravitino.trino.connector.util.GeneralDataTypeTransformer;
 public class PostgreSQLDataTypeTransformer extends GeneralDataTypeTransformer {
   @SuppressWarnings("UnusedVariable")
   private static final int POSTGRESQL_CHAR_LENGTH_LIMIT = 10485760;
+
   // 1 GB, please refer to
   // https://stackoverflow.com/questions/70785582/is-a-varchar-unlimited-in-postgresql
   @SuppressWarnings("UnusedVariable")

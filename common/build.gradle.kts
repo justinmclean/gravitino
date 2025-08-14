@@ -108,7 +108,7 @@ fun writeProjectPropertiesFile() {
         "# KIND, either express or implied.  See the License for the\n" +
         "# specific language governing permissions and limitations\n" +
         "# under the License.\n" +
-        "#\n"
+        "#\n",
     )
     writer.write("project.version=$projectVersion\n")
     writer.write("compile.date=$compileDate\n")
@@ -118,7 +118,7 @@ fun writeProjectPropertiesFile() {
 
 tasks {
   jar {
-    doFirst() {
+    doFirst {
       writeProjectPropertiesFile()
       if (!file(propertiesFile).exists()) {
         throw GradleException("Failed to generate $propertiesFile.")

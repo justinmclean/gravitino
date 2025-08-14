@@ -38,6 +38,7 @@ public class GravitinoCommandLine extends TestableCommandLine {
 
   public static final String CMD = "gcli"; // recommended name
   public static final String DEFAULT_URL = "http://localhost:8090";
+
   // This joiner is used to join multiple outputs to be displayed, e.g. roles or groups
 
   /**

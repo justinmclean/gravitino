@@ -50,10 +50,14 @@ public interface FunctionExpression extends Expression {
     return of(functionName, EMPTY_EXPRESSION);
   }
 
-  /** @return The transform function name. */
+  /**
+   * @return The transform function name.
+   */
   String functionName();
 
-  /** @return The arguments passed to the transform function. */
+  /**
+   * @return The arguments passed to the transform function.
+   */
   Expression[] arguments();
 
   @Override
@@ -81,7 +85,9 @@ public interface FunctionExpression extends Expression {
       return arguments;
     }
 
-    /** @return The string representation of the function expression. */
+    /**
+     * @return The string representation of the function expression.
+     */
     @Override
     public String toString() {
       if (arguments.length == 0) {

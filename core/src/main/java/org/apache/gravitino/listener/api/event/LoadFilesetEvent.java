@@ -27,6 +27,7 @@ import org.apache.gravitino.listener.api.info.FilesetInfo;
 @DeveloperApi
 public final class LoadFilesetEvent extends FilesetEvent {
   private final FilesetInfo loadedFilesetInfo;
+
   /**
    * Constructs a new {@code LoadFilesetEvent}.
    *

@@ -34,18 +34,24 @@ public class VXGroup extends VXDataObject implements java.io.Serializable {
 
   /** Name */
   protected String name;
+
   /** Description */
   protected String description;
+
   /** Type of group This attribute is of type enum CommonEnums::XAGroupType */
   protected int groupType = 0;
 
   protected int groupSource = RangerCommonEnums.GROUP_INTERNAL;
+
   /** Id of the credential store */
   protected Long credStoreId;
+
   /** Group visibility */
   protected Integer isVisible;
+
   /** Additional store attributes. */
   protected String otherAttributes;
+
   /** Sync Source Attribute */
   protected String syncSource;
 

@@ -29,8 +29,10 @@ public class S3SecretKeyCredential implements Credential {
 
   /** S3 secret key credential type. */
   public static final String S3_SECRET_KEY_CREDENTIAL_TYPE = "s3-secret-key";
+
   /** The static access key ID used to access S3 data. */
   public static final String GRAVITINO_S3_STATIC_ACCESS_KEY_ID = "s3-access-key-id";
+
   /** The static secret access key used to access S3 data. */
   public static final String GRAVITINO_S3_STATIC_SECRET_ACCESS_KEY = "s3-secret-access-key";
 

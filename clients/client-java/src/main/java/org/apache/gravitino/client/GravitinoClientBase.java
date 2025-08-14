@@ -49,8 +49,10 @@ public abstract class GravitinoClientBase implements Closeable {
 
   /** The REST client to communicate with the REST server */
   protected final RESTClient restClient;
+
   /** The REST API path for listing metalakes */
   protected static final String API_METALAKES_LIST_PATH = "api/metalakes";
+
   /** The REST API path prefix for load a specific metalake */
   protected static final String API_METALAKES_IDENTIFIER_PATH = API_METALAKES_LIST_PATH + "/";
 
@@ -204,12 +206,16 @@ public abstract class GravitinoClientBase implements Closeable {
   public abstract static class Builder<T> {
     /** The base URI for the Gravitino API. */
     protected String uri;
+
     /** The authentication provider. */
     protected AuthDataProvider authDataProvider;
+
     /** The check version flag. */
     protected boolean checkVersion = true;
+
     /** The request base header for the Gravitino API. */
     protected Map<String, String> headers = ImmutableMap.of();
+
     /** A map of properties (key-value pairs) used to configure the Gravitino client. */
     protected Map<String, String> properties = ImmutableMap.of();
 
