@@ -18,54 +18,69 @@
  */
 package org.apache.gravitino.client;
 
+import static org.apache.gravitino.dto.util.DTOConverters.fromDTO;
+
 import java.util.Collections;
-import java.util.Map;
 import java.util.Optional;
 import org.apache.gravitino.Audit;
 import org.apache.gravitino.MetadataObject;
+import org.apache.gravitino.dto.policy.PolicyDTO;
 import org.apache.gravitino.dto.responses.MetadataObjectListResponse;
-import org.apache.gravitino.dto.tag.TagDTO;
+import org.apache.gravitino.policy.Policy;
+import org.apache.gravitino.policy.PolicyContent;
 import org.apache.gravitino.rest.RESTUtils;
-import org.apache.gravitino.tag.Tag;
 
-/** Represents a generic tag. */
-class GenericTag implements Tag, Tag.AssociatedObjects {
+/** Represents a generic policy. */
+class GenericPolicy implements Policy, Policy.AssociatedObjects {
 
-  private final TagDTO tagDTO;
+  private final PolicyDTO policyDTO;
+
+  private final PolicyContent content;
 
   private final RESTClient restClient;
 
   private final String metalake;
 
-  GenericTag(TagDTO tagDTO, RESTClient restClient, String metalake) {
-    this.tagDTO = tagDTO;
+  GenericPolicy(PolicyDTO policyDTO, RESTClient restClient, String metalake) {
+    this.policyDTO = policyDTO;
+    this.content = fromDTO(policyDTO.content());
     this.restClient = restClient;
     this.metalake = metalake;
   }
 
   @Override
   public String name() {
-    return tagDTO.name();
+    return policyDTO.name();
+  }
+
+  @Override
+  public String policyType() {
+    return policyDTO.policyType();
   }
 
   @Override
   public String comment() {
-    return tagDTO.comment();
+    return policyDTO.comment();
   }
 
   @Override
-  public Map<String, String> properties() {
-    return tagDTO.properties();
+  public boolean enabled() {
+    return policyDTO.enabled();
+  }
+
+  @Override
+  public PolicyContent content() {
+    return content;
   }
 
   @Override
   public Optional<Boolean> inherited() {
-    return tagDTO.inherited();
+    return policyDTO.inherited();
   }
 
   @Override
   public Audit auditInfo() {
-    return tagDTO.auditInfo();
+    return policyDTO.auditInfo();
   }
 
   @Override
@@ -78,11 +93,11 @@ class GenericTag implements Tag, Tag.AssociatedObjects {
     MetadataObjectListResponse resp =
         restClient.get(
             String.format(
-                "api/metalakes/%s/tags/%s/objects",
+                "api/metalakes/%s/policies/%s/objects",
                 RESTUtils.encodeString(metalake), RESTUtils.encodeString(name())),
             MetadataObjectListResponse.class,
             Collections.emptyMap(),
-            ErrorHandlers.tagErrorHandler());
+            ErrorHandlers.policyErrorHandler());
 
     resp.validate();
     return resp.getMetadataObjects();
@@ -93,16 +108,29 @@ class GenericTag implements Tag, Tag.AssociatedObjects {
     if (this == obj) {
       return true;
     }
-    if (!(obj instanceof GenericTag)) {
+    if (!(obj instanceof GenericPolicy)) {
       return false;
     }
 
-    GenericTag that = (GenericTag) obj;
-    return tagDTO.equals(that.tagDTO);
+    GenericPolicy that = (GenericPolicy) obj;
+    return policyDTO.equals(that.policyDTO);
   }
 
   @Override
   public int hashCode() {
-    return tagDTO.hashCode();
+    return policyDTO.hashCode();
+  }
+
+  @Override
+  public String toString() {
+    return "GenericPolicy{"
+        + "policyDTO="
+        + policyDTO
+        + ", content="
+        + content
+        + ", metalake='"
+        + metalake
+        + '\''
+        + '}';
   }
 }
