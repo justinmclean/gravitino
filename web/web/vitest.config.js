@@ -16,21 +16,36 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.gravitino.spark.connector.integration.test.jdbc;
 
-import org.apache.gravitino.spark.connector.jdbc.postgresql.GravitinoPostgreSqlCatalogSpark33;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
+import { defineConfig } from 'vitest/config'
+import { resolve } from 'path'
 
-public class SparkJdbcPostgreSqlCatalogIT33 extends SparkJdbcPostgreSqlCatalogIT {
-
-  @Test
-  void testCatalogClassName() {
-    String catalogClass =
-        getSparkSession()
-            .sessionState()
-            .conf()
-            .getConfString("spark.sql.catalog." + getCatalogName());
-    Assertions.assertEquals(GravitinoPostgreSqlCatalogSpark33.class.getName(), catalogClass);
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.js'],
+    include: ['src/**/*.{test,spec}.{js,ts,jsx,tsx}'],
+    exclude: ['node_modules', 'dist', '.next'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        'node_modules/',
+        'src/test/',
+        '**/*.config.js',
+        '**/*.d.ts',
+        'coverage/**',
+        '.next/**',
+        'src/app/**',
+        'src/components/**',
+        'src/lib/icons/**'
+      ]
+    }
+  },
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, './src')
+    }
   }
-}
+})

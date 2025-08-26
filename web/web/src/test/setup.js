@@ -16,21 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.gravitino.spark.connector.integration.test.jdbc;
 
-import org.apache.gravitino.spark.connector.jdbc.postgresql.GravitinoPostgreSqlCatalogSpark33;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-
-public class SparkJdbcPostgreSqlCatalogIT33 extends SparkJdbcPostgreSqlCatalogIT {
-
-  @Test
-  void testCatalogClassName() {
-    String catalogClass =
-        getSparkSession()
-            .sessionState()
-            .conf()
-            .getConfString("spark.sql.catalog." + getCatalogName());
-    Assertions.assertEquals(GravitinoPostgreSqlCatalogSpark33.class.getName(), catalogClass);
-  }
-}
+// Mock window.location - Required for OIDC redirect URI construction
+Object.defineProperty(window, 'location', {
+  value: {
+    href: 'http://localhost:3000',
+    origin: 'http://localhost:3000',
+    pathname: '/',
+    search: '',
+    hash: ''
+  },
+  writable: true
+})
