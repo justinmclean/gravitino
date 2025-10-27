@@ -32,6 +32,7 @@ import static org.apache.hc.core5.http.HttpStatus.SC_OK;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -40,11 +41,13 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyShort;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.ImmutableMap;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.SocketTimeoutException;
@@ -167,8 +170,7 @@ public class TestGvfsBase extends GravitinoMockServerBase {
       Mockito.doThrow(new NoSuchFilesetException("fileset not found"))
           .when(mockOps)
           .open(any(), anyInt());
-      assertThrows(
-          FilesetPathNotFoundException.class, () -> fs.open(new Path("gvfs://fileset/"), 1024));
+      assertThrows(FileNotFoundException.class, () -> fs.open(new Path("gvfs://fileset/"), 1024));
 
       // test create
       Mockito.doThrow(new NoSuchCatalogException("fileset catalog not found"))
@@ -184,15 +186,14 @@ public class TestGvfsBase extends GravitinoMockServerBase {
       Mockito.doThrow(new NoSuchLocationNameException("location name not found"))
           .when(mockOps)
           .append(any(), anyInt(), any());
-      assertThrows(
-          FilesetPathNotFoundException.class, () -> fs.append(new Path("gvfs://fileset/"), 1024));
+      assertThrows(FileNotFoundException.class, () -> fs.append(new Path("gvfs://fileset/"), 1024));
 
       // test rename
       Mockito.doThrow(new NoSuchFilesetException("fileset not found"))
           .when(mockOps)
           .rename(any(), any());
       assertThrows(
-          FilesetPathNotFoundException.class,
+          FileNotFoundException.class,
           () -> fs.rename(new Path("gvfs://fileset/"), new Path("gvfs://fileset/new")));
 
       // test delete
@@ -206,21 +207,19 @@ public class TestGvfsBase extends GravitinoMockServerBase {
           .when(mockOps)
           .getFileStatus(any());
       assertThrows(
-          FilesetPathNotFoundException.class, () -> fs.getFileStatus(new Path("gvfs://fileset/")));
+          FileNotFoundException.class, () -> fs.getFileStatus(new Path("gvfs://fileset/")));
 
       // test listStatus
       Mockito.doThrow(new NoSuchFilesetException("fileset not found"))
           .when(mockOps)
           .listStatus(any());
-      assertThrows(
-          FilesetPathNotFoundException.class, () -> fs.listStatus(new Path("gvfs://fileset/")));
+      assertThrows(FileNotFoundException.class, () -> fs.listStatus(new Path("gvfs://fileset/")));
 
       // test listStatus
       Mockito.doThrow(new NoSuchFilesetException("fileset not found"))
           .when(mockOps)
           .listStatus(any());
-      assertThrows(
-          FilesetPathNotFoundException.class, () -> fs.listStatus(new Path("gvfs://fileset/")));
+      assertThrows(FileNotFoundException.class, () -> fs.listStatus(new Path("gvfs://fileset/")));
 
       // test mkdirs
       Mockito.doThrow(new NoSuchFilesetException("fileset not found"))
@@ -973,17 +972,17 @@ public class TestGvfsBase extends GravitinoMockServerBase {
 
       Path testPath = new Path(managedFilesetPath + "/test.txt");
       assertThrows(RuntimeException.class, () -> fs.setWorkingDirectory(testPath));
-      assertThrows(FilesetPathNotFoundException.class, () -> fs.open(testPath));
+      assertThrows(FileNotFoundException.class, () -> fs.open(testPath));
       assertThrows(IOException.class, () -> fs.create(testPath));
-      assertThrows(FilesetPathNotFoundException.class, () -> fs.append(testPath));
+      assertThrows(FileNotFoundException.class, () -> fs.append(testPath));
 
       Path testPath1 = new Path(managedFilesetPath + "/test1.txt");
-      assertThrows(FilesetPathNotFoundException.class, () -> fs.rename(testPath, testPath1));
+      assertThrows(FileNotFoundException.class, () -> fs.rename(testPath, testPath1));
 
       assertFalse(fs.delete(testPath, true));
 
-      assertThrows(FilesetPathNotFoundException.class, () -> fs.getFileStatus(testPath));
-      assertThrows(FilesetPathNotFoundException.class, () -> fs.listStatus(testPath));
+      assertThrows(FileNotFoundException.class, () -> fs.getFileStatus(testPath));
+      assertThrows(FileNotFoundException.class, () -> fs.listStatus(testPath));
 
       assertThrows(IOException.class, () -> fs.mkdirs(testPath));
 
@@ -1039,6 +1038,234 @@ public class TestGvfsBase extends GravitinoMockServerBase {
             });
     Assertions.assertInstanceOf(SocketTimeoutException.class, throwable.getCause());
     Assertions.assertEquals("Read timed out", throwable.getCause().getMessage());
+  }
+
+  @Test
+  public void testHookSetOperationsContext() throws IOException {
+    String filesetName = "testHookSetOperationsContext";
+    Path managedFilesetPath =
+        FileSystemTestUtils.createFilesetPath(catalogName, schemaName, filesetName, true);
+    Path localPath = FileSystemTestUtils.createLocalDirPrefix(catalogName, schemaName, filesetName);
+    String locationPath =
+        String.format(
+            "/api/metalakes/%s/catalogs/%s/schemas/%s/filesets/%s/location",
+            metalakeName, catalogName, schemaName, filesetName);
+
+    try (GravitinoVirtualFileSystem fs =
+        (GravitinoVirtualFileSystem) managedFilesetPath.getFileSystem(conf)) {
+
+      // Verify that setOperationsContext was called during GVFS initialization
+      MockGVFSHook hook = getHook(fs);
+      assertTrue(
+          hook.setOperationsContextCalled,
+          "setOperationsContext should be called during initialization");
+      assertNotNull(hook.operations, "Operations context should not be null");
+      assertEquals(
+          fs.getOperations(),
+          hook.operations,
+          "Hook should have reference to the same operations instance");
+
+      // Verify the hook can access operations methods
+      FileLocationResponse fileLocationResponse = new FileLocationResponse(localPath.toString());
+      Map<String, String> queryParams = new HashMap<>();
+      queryParams.put("sub_path", "");
+      buildMockResource(Method.GET, locationPath, queryParams, null, fileLocationResponse, SC_OK);
+      buildMockResourceForCredential(filesetName, localPath.toString());
+
+      try (FileSystem localFileSystem = localPath.getFileSystem(conf)) {
+        FileSystemTestUtils.mkdirs(localPath, localFileSystem);
+        FileSystemTestUtils.mkdirs(managedFilesetPath, fs);
+
+        // Verify hook's operations context is still valid after operations are performed
+        assertNotNull(hook.operations, "Operations context should remain available");
+        assertTrue(hook.preMkdirsCalled, "Hook should be invoked for operations");
+        assertTrue(hook.postMkdirsCalled, "Hook should be invoked for operations");
+      }
+    }
+  }
+
+  @Test
+  public void testFailureHandlingMethodsAreCalled()
+      throws IOException, NoSuchFieldException, IllegalAccessException {
+    Assumptions.assumeTrue(getClass() == TestGvfsBase.class);
+    Configuration newConf = new Configuration(conf);
+    newConf.set(
+        GravitinoVirtualFileSystemConfiguration.FS_GRAVITINO_HOOK_CLASS,
+        MockGVFSHook.class.getCanonicalName());
+
+    try (GravitinoVirtualFileSystem fs =
+        (GravitinoVirtualFileSystem) new Path("gvfs://fileset/").getFileSystem(newConf)) {
+      BaseGVFSOperations mockOps = Mockito.mock(BaseGVFSOperations.class);
+
+      // Inject the mockOps
+      Field operationsField = GravitinoVirtualFileSystem.class.getDeclaredField("operations");
+      operationsField.setAccessible(true);
+      operationsField.set(fs, mockOps);
+
+      MockGVFSHook hook = getHook(fs);
+
+      // Test setWorkingDirectory failure
+      Mockito.doThrow(new RuntimeException("setWorkingDirectory failed"))
+          .when(mockOps)
+          .setWorkingDirectory(any());
+      assertThrows(
+          RuntimeException.class, () -> fs.setWorkingDirectory(new Path("gvfs://fileset/")));
+      assertTrue(
+          hook.onSetWorkingDirectoryFailureCalled, "onSetWorkingDirectoryFailure should be called");
+
+      // Test open failure
+      Mockito.doThrow(new RuntimeException("open failed")).when(mockOps).open(any(), anyInt());
+      assertThrows(RuntimeException.class, () -> fs.open(new Path("gvfs://fileset/"), 1024));
+      assertTrue(hook.onOpenFailureCalled, "onOpenFailure should be called");
+
+      // Test create failure
+      Mockito.doThrow(new RuntimeException("create failed"))
+          .when(mockOps)
+          .create(any(), any(), anyBoolean(), anyInt(), anyShort(), anyLong(), any());
+      assertThrows(RuntimeException.class, () -> fs.create(new Path("gvfs://fileset/"), true));
+      assertTrue(hook.onCreateFailureCalled, "onCreateFailure should be called");
+
+      // Test append failure
+      Mockito.doThrow(new RuntimeException("append failed"))
+          .when(mockOps)
+          .append(any(), anyInt(), any());
+      assertThrows(RuntimeException.class, () -> fs.append(new Path("gvfs://fileset/"), 1024));
+      assertTrue(hook.onAppendFailureCalled, "onAppendFailure should be called");
+
+      // Test rename failure
+      Mockito.doThrow(new RuntimeException("rename failed")).when(mockOps).rename(any(), any());
+      assertThrows(
+          RuntimeException.class,
+          () -> fs.rename(new Path("gvfs://fileset/"), new Path("gvfs://fileset/new")));
+      assertTrue(hook.onRenameFailureCalled, "onRenameFailure should be called");
+
+      // Test delete failure
+      Mockito.doThrow(new RuntimeException("delete failed"))
+          .when(mockOps)
+          .delete(any(), anyBoolean());
+      assertThrows(RuntimeException.class, () -> fs.delete(new Path("gvfs://fileset/"), true));
+      assertTrue(hook.onDeleteFailureCalled, "onDeleteFailure should be called");
+
+      // Test getFileStatus failure
+      Mockito.doThrow(new RuntimeException("getFileStatus failed"))
+          .when(mockOps)
+          .getFileStatus(any());
+      assertThrows(RuntimeException.class, () -> fs.getFileStatus(new Path("gvfs://fileset/")));
+      assertTrue(hook.onGetFileStatusFailureCalled, "onGetFileStatusFailure should be called");
+
+      // Test listStatus failure
+      Mockito.doThrow(new RuntimeException("listStatus failed")).when(mockOps).listStatus(any());
+      assertThrows(RuntimeException.class, () -> fs.listStatus(new Path("gvfs://fileset/")));
+      assertTrue(hook.onListStatusFailureCalled, "onListStatusFailure should be called");
+
+      // Test mkdirs failure
+      Mockito.doThrow(new RuntimeException("mkdirs failed")).when(mockOps).mkdirs(any(), any());
+      assertThrows(RuntimeException.class, () -> fs.mkdirs(new Path("gvfs://fileset/")));
+      assertTrue(hook.onMkdirsFailureCalled, "onMkdirsFailure should be called");
+
+      // Test getDefaultReplication failure
+      Mockito.doThrow(new RuntimeException("getDefaultReplication failed"))
+          .when(mockOps)
+          .getDefaultReplication(any());
+      assertThrows(
+          RuntimeException.class, () -> fs.getDefaultReplication(new Path("gvfs://fileset/")));
+      assertTrue(
+          hook.onGetDefaultReplicationFailureCalled,
+          "onGetDefaultReplicationFailure should be called");
+
+      // Test getDefaultBlockSize failure
+      Mockito.doThrow(new RuntimeException("getDefaultBlockSize failed"))
+          .when(mockOps)
+          .getDefaultBlockSize(any());
+      assertThrows(
+          RuntimeException.class, () -> fs.getDefaultBlockSize(new Path("gvfs://fileset/")));
+      assertTrue(
+          hook.onGetDefaultBlockSizeFailureCalled, "onGetDefaultBlockSizeFailure should be called");
+    }
+  }
+
+  @Test
+  public void testFailureHandlingWithSpecificExceptions()
+      throws IOException, NoSuchFieldException, IllegalAccessException {
+    Assumptions.assumeTrue(getClass() == TestGvfsBase.class);
+    Configuration newConf = new Configuration(conf);
+    newConf.set(
+        GravitinoVirtualFileSystemConfiguration.FS_GRAVITINO_HOOK_CLASS,
+        MockGVFSHook.class.getCanonicalName());
+
+    try (GravitinoVirtualFileSystem fs =
+        (GravitinoVirtualFileSystem) new Path("gvfs://fileset/").getFileSystem(newConf)) {
+      BaseGVFSOperations mockOps = Mockito.mock(BaseGVFSOperations.class);
+
+      // Inject the mockOps
+      Field operationsField = GravitinoVirtualFileSystem.class.getDeclaredField("operations");
+      operationsField.setAccessible(true);
+      operationsField.set(fs, mockOps);
+
+      MockGVFSHook hook = getHook(fs);
+
+      // Test with FileNotFoundException
+      Mockito.doThrow(new FileNotFoundException("File not found"))
+          .when(mockOps)
+          .open(any(), anyInt());
+      assertThrows(FileNotFoundException.class, () -> fs.open(new Path("gvfs://fileset/"), 1024));
+      assertTrue(
+          hook.onOpenFailureCalled, "onOpenFailure should be called with FileNotFoundException");
+
+      // Test with IOException
+      Mockito.doThrow(new IOException("IO error"))
+          .when(mockOps)
+          .create(any(), any(), anyBoolean(), anyInt(), anyShort(), anyLong(), any());
+      assertThrows(IOException.class, () -> fs.create(new Path("gvfs://fileset/"), true));
+      assertTrue(hook.onCreateFailureCalled, "onCreateFailure should be called with IOException");
+
+      // Test with SecurityException
+      Mockito.doThrow(new SecurityException("Security violation"))
+          .when(mockOps)
+          .delete(any(), anyBoolean());
+      assertThrows(SecurityException.class, () -> fs.delete(new Path("gvfs://fileset/"), true));
+      assertTrue(
+          hook.onDeleteFailureCalled, "onDeleteFailure should be called with SecurityException");
+    }
+  }
+
+  @Test
+  public void testFailureHandlingMethodParameters()
+      throws IOException, NoSuchFieldException, IllegalAccessException {
+    Assumptions.assumeTrue(getClass() == TestGvfsBase.class);
+    Configuration newConf = new Configuration(conf);
+    newConf.set(
+        GravitinoVirtualFileSystemConfiguration.FS_GRAVITINO_HOOK_CLASS,
+        MockGVFSHook.class.getCanonicalName());
+
+    try (GravitinoVirtualFileSystem fs =
+        (GravitinoVirtualFileSystem) new Path("gvfs://fileset/").getFileSystem(newConf)) {
+      BaseGVFSOperations mockOps = Mockito.mock(BaseGVFSOperations.class);
+
+      // Inject the mockOps
+      Field operationsField = GravitinoVirtualFileSystem.class.getDeclaredField("operations");
+      operationsField.setAccessible(true);
+      operationsField.set(fs, mockOps);
+
+      MockGVFSHook hook = getHook(fs);
+
+      Path testPath = new Path("gvfs://fileset/test");
+      RuntimeException testException = new RuntimeException("Test exception");
+
+      // Test that failure methods receive correct parameters
+      Mockito.doThrow(testException).when(mockOps).setWorkingDirectory(testPath);
+      assertThrows(RuntimeException.class, () -> fs.setWorkingDirectory(testPath));
+      assertTrue(
+          hook.onSetWorkingDirectoryFailureCalled, "onSetWorkingDirectoryFailure should be called");
+
+      // Test with specific parameters for create
+      Mockito.doThrow(testException)
+          .when(mockOps)
+          .create(eq(testPath), any(), eq(true), eq(1024), eq((short) 1), eq(128L), any());
+      assertThrows(RuntimeException.class, () -> fs.create(testPath, true, 1024, (short) 1, 128L));
+      assertTrue(
+          hook.onCreateFailureCalled, "onCreateFailure should be called with correct parameters");
+    }
   }
 
   private void buildMockResourceForCredential(String filesetName, String filesetLocation)
