@@ -35,6 +35,7 @@ dependencies {
   implementation(project(":core")) {
     exclude("*")
   }
+  implementation(project(":lance:lance-common"))
 
   implementation(libs.bundles.log4j)
   implementation(libs.cglib)
@@ -42,6 +43,9 @@ dependencies {
   implementation(libs.commons.io)
   implementation(libs.commons.lang3)
   implementation(libs.guava)
+  implementation(libs.hadoop3.client.api)
+  implementation(libs.hadoop3.client.runtime)
+  implementation(libs.lance)
 
   annotationProcessor(libs.lombok)
 
