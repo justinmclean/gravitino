@@ -216,6 +216,7 @@ public class JcasbinAuthorizer implements GravitinoAuthorizer {
     if (StringUtils.isBlank(currentUserName)) {
       return false;
     }
+
     try {
       return GravitinoEnv.getInstance()
               .entityStore()
