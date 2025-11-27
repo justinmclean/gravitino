@@ -48,7 +48,7 @@ public class CommandContext {
    * @param line The command line.
    */
   public CommandContext(CommandLine line) {
-    Preconditions.checkNotNull(line);
+    Preconditions.checkArgument(line != null, "line cannot be null");
     this.line = line;
     this.force = line.hasOption(GravitinoOptions.FORCE);
     this.outputFormat =
