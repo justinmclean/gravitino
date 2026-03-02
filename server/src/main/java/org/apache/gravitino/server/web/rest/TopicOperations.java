@@ -20,6 +20,7 @@ package org.apache.gravitino.server.web.rest;
 
 import com.codahale.metrics.annotation.ResponseMetered;
 import com.codahale.metrics.annotation.Timed;
+import com.google.common.collect.Lists;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
@@ -33,6 +34,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import org.apache.gravitino.Entity;
 import org.apache.gravitino.MetadataObject;
+import org.apache.gravitino.MetadataObjects;
 import org.apache.gravitino.NameIdentifier;
 import org.apache.gravitino.Namespace;
 import org.apache.gravitino.catalog.TopicDispatcher;
@@ -51,6 +53,7 @@ import org.apache.gravitino.server.authorization.annotations.AuthorizationExpres
 import org.apache.gravitino.server.authorization.annotations.AuthorizationMetadata;
 import org.apache.gravitino.server.authorization.expression.AuthorizationExpressionConstants;
 import org.apache.gravitino.server.web.Utils;
+import org.apache.gravitino.utils.MetadataObjectUtil;
 import org.apache.gravitino.utils.NameIdentifierUtil;
 import org.apache.gravitino.utils.NamespaceUtil;
 import org.slf4j.Logger;
@@ -74,7 +77,7 @@ public class TopicOperations {
   @Timed(name = "list-topic." + MetricNames.HTTP_PROCESS_DURATION, absolute = true)
   @ResponseMetered(name = "list-topic", absolute = true)
   @AuthorizationExpression(
-      expression = AuthorizationExpressionConstants.loadSchemaAuthorizationExpression,
+      expression = AuthorizationExpressionConstants.LOAD_SCHEMA_AUTHORIZATION_EXPRESSION,
       accessMetadataType = MetadataObject.Type.SCHEMA)
   public Response listTopics(
       @PathParam("metalake") @AuthorizationMetadata(type = Entity.EntityType.METALAKE)
@@ -93,7 +96,7 @@ public class TopicOperations {
             topics =
                 MetadataAuthzHelper.filterByExpression(
                     metalake,
-                    AuthorizationExpressionConstants.filterTopicsAuthorizationExpression,
+                    AuthorizationExpressionConstants.FILTER_TOPICS_AUTHORIZATION_EXPRESSION,
                     Entity.EntityType.TOPIC,
                     topics);
             Response response = Utils.ok(new EntityListResponse(topics));
@@ -139,6 +142,12 @@ public class TopicOperations {
             NameIdentifier ident =
                 NameIdentifierUtil.ofTopic(metalake, catalog, schema, request.getName());
 
+            // Make sure schema is imported, otherwise set owner for the topic may fail.
+            MetadataObjectUtil.checkMetadataObject(
+                metalake,
+                MetadataObjects.of(
+                    Lists.newArrayList(catalog, schema), MetadataObject.Type.SCHEMA));
+
             Topic topic =
                 dispatcher.createTopic(
                     ident,
@@ -161,7 +170,7 @@ public class TopicOperations {
   @Timed(name = "load-topic." + MetricNames.HTTP_PROCESS_DURATION, absolute = true)
   @ResponseMetered(name = "load-topic", absolute = true)
   @AuthorizationExpression(
-      expression = AuthorizationExpressionConstants.loadTopicsAuthorizationExpression,
+      expression = AuthorizationExpressionConstants.LOAD_TOPICS_AUTHORIZATION_EXPRESSION,
       accessMetadataType = MetadataObject.Type.TOPIC)
   public Response loadTopic(
       @PathParam("metalake") @AuthorizationMetadata(type = Entity.EntityType.METALAKE)

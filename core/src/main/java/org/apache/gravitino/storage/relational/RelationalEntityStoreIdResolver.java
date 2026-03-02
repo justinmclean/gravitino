@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableSet;
 import java.util.Set;
 import org.apache.gravitino.Entity;
 import org.apache.gravitino.NameIdentifier;
+import org.apache.gravitino.job.JobHandle;
 import org.apache.gravitino.meta.EntityIdResolver;
 import org.apache.gravitino.meta.NamespacedEntityId;
 import org.apache.gravitino.storage.relational.helper.CatalogIds;
@@ -29,8 +30,10 @@ import org.apache.gravitino.storage.relational.helper.SchemaIds;
 import org.apache.gravitino.storage.relational.service.CatalogMetaService;
 import org.apache.gravitino.storage.relational.service.FilesetMetaService;
 import org.apache.gravitino.storage.relational.service.GroupMetaService;
+import org.apache.gravitino.storage.relational.service.JobTemplateMetaService;
 import org.apache.gravitino.storage.relational.service.MetalakeMetaService;
 import org.apache.gravitino.storage.relational.service.ModelMetaService;
+import org.apache.gravitino.storage.relational.service.PolicyMetaService;
 import org.apache.gravitino.storage.relational.service.RoleMetaService;
 import org.apache.gravitino.storage.relational.service.SchemaMetaService;
 import org.apache.gravitino.storage.relational.service.TableColumnMetaService;
@@ -38,6 +41,7 @@ import org.apache.gravitino.storage.relational.service.TableMetaService;
 import org.apache.gravitino.storage.relational.service.TagMetaService;
 import org.apache.gravitino.storage.relational.service.TopicMetaService;
 import org.apache.gravitino.storage.relational.service.UserMetaService;
+import org.apache.gravitino.storage.relational.service.ViewMetaService;
 import org.apache.gravitino.utils.NameIdentifierUtil;
 
 public class RelationalEntityStoreIdResolver implements EntityIdResolver {
@@ -47,24 +51,30 @@ public class RelationalEntityStoreIdResolver implements EntityIdResolver {
           Entity.EntityType.ROLE,
           Entity.EntityType.USER,
           Entity.EntityType.GROUP,
-          Entity.EntityType.TAG);
-  private static final Set<Entity.EntityType> ENTITY_TYPES_REQURING_CATALOG_IDS =
+          Entity.EntityType.TAG,
+          Entity.EntityType.POLICY,
+          Entity.EntityType.JOB,
+          Entity.EntityType.JOB_TEMPLATE);
+
+  private static final Set<Entity.EntityType> ENTITY_TYPES_REQUIRING_CATALOG_IDS =
       ImmutableSet.of(Entity.EntityType.CATALOG);
-  private static final Set<Entity.EntityType> ENTITY_TYPES_REQURING_SCHEMA_IDS =
+
+  private static final Set<Entity.EntityType> ENTITY_TYPES_REQUIRING_SCHEMA_IDS =
       ImmutableSet.of(
           Entity.EntityType.SCHEMA,
           Entity.EntityType.TABLE,
           Entity.EntityType.FILESET,
           Entity.EntityType.TOPIC,
           Entity.EntityType.MODEL,
-          Entity.EntityType.COLUMN);
+          Entity.EntityType.COLUMN,
+          Entity.EntityType.VIEW);
 
   @Override
   public NamespacedEntityId getEntityIds(NameIdentifier nameIdentifier, Entity.EntityType type) {
     if (ENTITY_TYPES_REQUIRING_METALAKE_ID.contains(type)) {
       return getEntityIdsRequiringMetalakeId(nameIdentifier, type);
 
-    } else if (ENTITY_TYPES_REQURING_CATALOG_IDS.contains(type)) {
+    } else if (ENTITY_TYPES_REQUIRING_CATALOG_IDS.contains(type)) {
       CatalogIds catalogIds =
           CatalogMetaService.getInstance()
               .getCatalogIdByMetalakeAndCatalogName(
@@ -72,7 +82,7 @@ public class RelationalEntityStoreIdResolver implements EntityIdResolver {
                   NameIdentifierUtil.getCatalogIdentifier(nameIdentifier).name());
       return new NamespacedEntityId(catalogIds.getCatalogId(), catalogIds.getMetalakeId());
 
-    } else if (ENTITY_TYPES_REQURING_SCHEMA_IDS.contains(type)) {
+    } else if (ENTITY_TYPES_REQUIRING_SCHEMA_IDS.contains(type)) {
       return getEntityIdsRequiringSchemaIds(nameIdentifier, type);
 
     } else {
@@ -85,14 +95,14 @@ public class RelationalEntityStoreIdResolver implements EntityIdResolver {
     if (ENTITY_TYPES_REQUIRING_METALAKE_ID.contains(type)) {
       return getEntityIdsRequiringMetalakeId(nameIdentifier, type).entityId();
 
-    } else if (ENTITY_TYPES_REQURING_CATALOG_IDS.contains(type)) {
+    } else if (ENTITY_TYPES_REQUIRING_CATALOG_IDS.contains(type)) {
       return CatalogMetaService.getInstance()
           .getCatalogIdByMetalakeAndCatalogName(
               NameIdentifierUtil.getMetalake(nameIdentifier),
               NameIdentifierUtil.getCatalogIdentifier(nameIdentifier).name())
           .getCatalogId();
 
-    } else if (ENTITY_TYPES_REQURING_SCHEMA_IDS.contains(type)) {
+    } else if (ENTITY_TYPES_REQUIRING_SCHEMA_IDS.contains(type)) {
       return getEntityIdsRequiringSchemaIds(nameIdentifier, type).entityId();
 
     } else {
@@ -132,6 +142,23 @@ public class RelationalEntityStoreIdResolver implements EntityIdResolver {
         long tagId =
             TagMetaService.getInstance().getTagIdByTagName(metalakeId, nameIdentifier.name());
         return new NamespacedEntityId(tagId, metalakeId);
+
+      case POLICY:
+        long policyId =
+            PolicyMetaService.getInstance()
+                .getPolicyIdByPolicyName(metalakeId, nameIdentifier.name());
+        return new NamespacedEntityId(policyId, metalakeId);
+
+      case JOB_TEMPLATE:
+        long jobTemplateId =
+            JobTemplateMetaService.getInstance()
+                .getJobTemplateIdByMetalakeIdAndName(metalakeId, nameIdentifier.name());
+        return new NamespacedEntityId(jobTemplateId, metalakeId);
+
+      case JOB:
+        long jobId =
+            Long.parseLong(nameIdentifier.name().substring(JobHandle.JOB_ID_PREFIX.length()));
+        return new NamespacedEntityId(jobId, metalakeId);
 
       default:
         throw new IllegalArgumentException("Unsupported entity type: " + type);
@@ -198,6 +225,13 @@ public class RelationalEntityStoreIdResolver implements EntityIdResolver {
                 .getModelIdBySchemaIdAndModelName(schemaIds.getSchemaId(), nameIdentifier.name());
         return new NamespacedEntityId(
             modelId, schemaIds.getMetalakeId(), schemaIds.getCatalogId(), schemaIds.getSchemaId());
+
+      case VIEW:
+        long viewId =
+            ViewMetaService.getInstance()
+                .getViewIdBySchemaIdAndName(schemaIds.getSchemaId(), nameIdentifier.name());
+        return new NamespacedEntityId(
+            viewId, schemaIds.getMetalakeId(), schemaIds.getCatalogId(), schemaIds.getSchemaId());
 
       default:
         throw new IllegalArgumentException("Unsupported entity type: " + type);

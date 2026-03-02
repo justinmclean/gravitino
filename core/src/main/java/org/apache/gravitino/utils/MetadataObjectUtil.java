@@ -18,6 +18,8 @@
  */
 package org.apache.gravitino.utils;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
@@ -31,7 +33,10 @@ import org.apache.gravitino.MetadataObject;
 import org.apache.gravitino.NameIdentifier;
 import org.apache.gravitino.authorization.AuthorizationUtils;
 import org.apache.gravitino.exceptions.IllegalMetadataObjectException;
+import org.apache.gravitino.exceptions.NoSuchJobException;
+import org.apache.gravitino.exceptions.NoSuchJobTemplateException;
 import org.apache.gravitino.exceptions.NoSuchMetadataObjectException;
+import org.apache.gravitino.exceptions.NoSuchPolicyException;
 import org.apache.gravitino.exceptions.NoSuchRoleException;
 import org.apache.gravitino.exceptions.NoSuchTagException;
 
@@ -51,6 +56,10 @@ public class MetadataObjectUtil {
           .put(MetadataObject.Type.ROLE, Entity.EntityType.ROLE)
           .put(MetadataObject.Type.MODEL, Entity.EntityType.MODEL)
           .put(MetadataObject.Type.TAG, Entity.EntityType.TAG)
+          .put(MetadataObject.Type.POLICY, Entity.EntityType.POLICY)
+          .put(MetadataObject.Type.JOB_TEMPLATE, Entity.EntityType.JOB_TEMPLATE)
+          .put(MetadataObject.Type.JOB, Entity.EntityType.JOB)
+          .put(MetadataObject.Type.VIEW, Entity.EntityType.VIEW)
           .build();
 
   private MetadataObjectUtil() {}
@@ -106,6 +115,13 @@ public class MetadataObjectUtil {
         return AuthorizationUtils.ofRole(metalakeName, metadataObject.name());
       case TAG:
         return NameIdentifierUtil.ofTag(metalakeName, metadataObject.name());
+      case POLICY:
+        return NameIdentifierUtil.ofPolicy(metalakeName, metadataObject.name());
+      case JOB:
+        return NameIdentifierUtil.ofJob(metalakeName, metadataObject.name());
+      case JOB_TEMPLATE:
+        return NameIdentifierUtil.ofJobTemplate(metalakeName, metadataObject.name());
+      case VIEW:
       case CATALOG:
       case SCHEMA:
       case TABLE:
@@ -185,26 +201,56 @@ public class MetadataObjectUtil {
         check(env.modelDispatcher().modelExists(identifier), exceptionToThrowSupplier);
         break;
 
+      case VIEW:
+        NameIdentifierUtil.checkView(identifier);
+        check(env.viewDispatcher().viewExists(identifier), exceptionToThrowSupplier);
+        break;
+
       case ROLE:
         AuthorizationUtils.checkRole(identifier);
         try {
           env.accessControlDispatcher().getRole(metalake, object.fullName());
         } catch (NoSuchRoleException nsr) {
-          Preconditions.checkArgument(
-              exceptionToThrowSupplier != null, "exceptionToThrowSupplier should not be null");
           throw exceptionToThrowSupplier.get();
         }
         break;
+
       case TAG:
         NameIdentifierUtil.checkTag(identifier);
         try {
           env.tagDispatcher().getTag(metalake, object.fullName());
         } catch (NoSuchTagException nsr) {
-          Preconditions.checkArgument(
-              exceptionToThrowSupplier != null, "exceptionToThrowSupplier should not be null");
           throw exceptionToThrowSupplier.get();
         }
         break;
+
+      case POLICY:
+        NameIdentifierUtil.checkPolicy(identifier);
+        try {
+          env.policyDispatcher().getPolicy(metalake, object.fullName());
+        } catch (NoSuchPolicyException nsr) {
+          throw checkNotNull(exceptionToThrowSupplier).get();
+        }
+        break;
+
+      case JOB:
+        NameIdentifierUtil.checkJob(identifier);
+        try {
+          env.jobOperationDispatcher().getJob(metalake, object.fullName());
+        } catch (NoSuchJobException e) {
+          throw exceptionToThrowSupplier.get();
+        }
+        break;
+
+      case JOB_TEMPLATE:
+        NameIdentifierUtil.checkJobTemplate(identifier);
+        try {
+          env.jobOperationDispatcher().getJobTemplate(metalake, object.fullName());
+        } catch (NoSuchJobTemplateException e) {
+          throw exceptionToThrowSupplier.get();
+        }
+        break;
+
       default:
         throw new IllegalArgumentException(
             String.format("Doesn't support the type %s", object.type()));

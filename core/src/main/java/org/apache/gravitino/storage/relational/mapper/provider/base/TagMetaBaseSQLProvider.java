@@ -160,7 +160,8 @@ public class TagMetaBaseSQLProvider {
         + " WHERE tag_id = #{oldTagMeta.tagId}"
         + " AND metalake_id = #{oldTagMeta.metalakeId}"
         + " AND tag_name = #{oldTagMeta.tagName}"
-        + " AND (tag_comment IS NULL OR tag_comment = #{oldTagMeta.comment})"
+        + " AND (tag_comment = #{oldTagMeta.comment}"
+        + "   OR (tag_comment IS NULL and #{oldTagMeta.comment} IS NULL))"
         + " AND properties = #{oldTagMeta.properties}"
         + " AND audit_info = #{oldTagMeta.auditInfo}"
         + " AND current_version = #{oldTagMeta.currentVersion}"
@@ -223,5 +224,32 @@ public class TagMetaBaseSQLProvider {
         + " FROM "
         + TAG_TABLE_NAME
         + " WHERE tag_id = #{tagId} and deleted_at = 0";
+  }
+
+  public String batchSelectTagByIdentifier(
+      @Param("metalakeName") String metalakeName, @Param("tagNames") List<String> tagNames) {
+    return "<script>"
+        + "SELECT tm.tag_id as tagId, tm.tag_name as tagName,"
+        + " tm.metalake_id as metalakeId,"
+        + " tm.tag_comment as comment,"
+        + " tm.properties as properties,"
+        + " tm.audit_info as auditInfo,"
+        + " tm.current_version as currentVersion,"
+        + " tm.last_version as lastVersion,"
+        + " tm.deleted_at as deletedAt"
+        + " FROM "
+        + TAG_TABLE_NAME
+        + " tm"
+        + " JOIN "
+        + MetalakeMetaMapper.TABLE_NAME
+        + " mm ON tm.metalake_id = mm.metalake_id"
+        + " WHERE mm.metalake_name = #{metalakeName}"
+        + " AND tm.tag_name IN ("
+        + "<foreach collection='tagNames' item='tagName' separator=','>"
+        + "#{tagName}"
+        + "</foreach>"
+        + " )"
+        + " AND tm.deleted_at = 0 AND mm.deleted_at = 0"
+        + "</script>";
   }
 }

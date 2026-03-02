@@ -29,35 +29,28 @@ import org.apache.gravitino.Entity;
 import org.apache.gravitino.NameIdentifier;
 import org.apache.gravitino.authorization.AuthorizationRequestContext;
 import org.apache.gravitino.dto.requests.TagsAssociateRequest;
-import org.apache.gravitino.server.authorization.expression.AuthorizationExpressionEvaluator;
 import org.apache.gravitino.server.web.rest.MetadataObjectTagOperations;
 
 /**
  * Metadata object authorization for {@link
  * MetadataObjectTagOperations#associateTagsForObject(String, String, String, TagsAssociateRequest)}
  */
-public class AssociateTagAuthorizationExecutor implements AuthorizationExecutor {
+public class AssociateTagAuthorizationExecutor extends CommonAuthorizerExecutor
+    implements AuthorizationExecutor {
 
   private final Parameter[] parameters;
   private final Object[] args;
-  private final Map<Entity.EntityType, NameIdentifier> metadataContext;
-  private final AuthorizationExpressionEvaluator authorizationExpressionEvaluator;
-  private final Map<String, Object> pathParams;
-  private final String entityType;
 
   public AssociateTagAuthorizationExecutor(
+      String expression,
       Parameter[] parameters,
       Object[] args,
       Map<Entity.EntityType, NameIdentifier> metadataContext,
-      AuthorizationExpressionEvaluator authorizationExpressionEvaluator,
       Map<String, Object> pathParams,
-      String entityType) {
+      Optional<String> entityType) {
+    super(expression, metadataContext, pathParams, entityType);
     this.parameters = parameters;
     this.args = args;
-    this.metadataContext = metadataContext;
-    this.authorizationExpressionEvaluator = authorizationExpressionEvaluator;
-    this.pathParams = pathParams;
-    this.entityType = entityType;
   }
 
   @Override
@@ -68,6 +61,7 @@ public class AssociateTagAuthorizationExecutor implements AuthorizationExecutor 
     }
 
     AuthorizationRequestContext context = new AuthorizationRequestContext();
+    context.setOriginalAuthorizationExpression(expression);
     Entity.EntityType targetType =
         Entity.EntityType.TAG; // Tags are the only supported batch target here
     Preconditions.checkArgument(
@@ -104,7 +98,7 @@ public class AssociateTagAuthorizationExecutor implements AuthorizationExecutor 
 
       boolean authorized =
           authorizationExpressionEvaluator.evaluate(
-              currentContext, pathParams, context, Optional.ofNullable(entityType));
+              currentContext, pathParams, context, entityType);
 
       if (!authorized) {
         return false; // Fail fast on first unauthorized tag

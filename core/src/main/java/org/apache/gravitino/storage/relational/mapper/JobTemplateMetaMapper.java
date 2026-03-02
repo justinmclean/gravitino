@@ -70,4 +70,20 @@ public interface JobTemplateMetaMapper {
   Integer updateJobTemplateMeta(
       @Param("newJobTemplateMeta") JobTemplatePO newJobTemplatePO,
       @Param("oldJobTemplateMeta") JobTemplatePO oldJobTemplatePO);
+
+  @SelectProvider(
+      type = JobTemplateMetaSQLProviderFactory.class,
+      method = "selectJobTemplateIdByMetalakeAndName")
+  Long selectJobTemplateIdByMetalakeAndName(
+      @Param("metalakeId") long metalakeId, @Param("jobTemplateName") String jobTemplateName);
+
+  @SelectProvider(type = JobTemplateMetaSQLProviderFactory.class, method = "selectJobTemplateById")
+  JobTemplatePO selectJobTemplateById(Long jobTemplateId);
+
+  @SelectProvider(
+      type = JobTemplateMetaSQLProviderFactory.class,
+      method = "batchSelectJobTemplateByIdentifier")
+  List<JobTemplatePO> batchSelectJobTemplateByIdentifier(
+      @Param("metalakeName") String metalakeName,
+      @Param("jobTemplateNames") List<String> jobTemplateNames);
 }

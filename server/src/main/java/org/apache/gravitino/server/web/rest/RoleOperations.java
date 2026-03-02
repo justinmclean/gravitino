@@ -38,7 +38,6 @@ import org.apache.gravitino.Entity;
 import org.apache.gravitino.GravitinoEnv;
 import org.apache.gravitino.MetadataObject;
 import org.apache.gravitino.MetadataObjects;
-import org.apache.gravitino.NameIdentifier;
 import org.apache.gravitino.authorization.AccessControlDispatcher;
 import org.apache.gravitino.authorization.AuthorizationUtils;
 import org.apache.gravitino.authorization.Privilege;
@@ -53,6 +52,7 @@ import org.apache.gravitino.dto.responses.RoleResponse;
 import org.apache.gravitino.dto.util.DTOConverters;
 import org.apache.gravitino.exceptions.IllegalMetadataObjectException;
 import org.apache.gravitino.exceptions.NoSuchMetadataObjectException;
+import org.apache.gravitino.metalake.MetalakeManager;
 import org.apache.gravitino.metrics.MetricNames;
 import org.apache.gravitino.server.authorization.MetadataAuthzHelper;
 import org.apache.gravitino.server.authorization.NameBindings;
@@ -82,29 +82,23 @@ public class RoleOperations {
   @Produces("application/vnd.gravitino.v1+json")
   @Timed(name = "list-role." + MetricNames.HTTP_PROCESS_DURATION, absolute = true)
   @ResponseMetered(name = "list-role", absolute = true)
-  public Response listRoles(@PathParam("metalake") String metalake) {
+  @AuthorizationExpression(expression = "")
+  public Response listRoles(
+      @PathParam("metalake") @AuthorizationMetadata(type = Entity.EntityType.METALAKE)
+          String metalake) {
     try {
       return Utils.doAs(
           httpRequest,
           () -> {
+            MetalakeManager.checkMetalakeInUse(metalake);
             String[] names = accessControlManager.listRoleNames(metalake);
             names =
-                Arrays.stream(names)
-                    .filter(
-                        role -> {
-                          NameIdentifier[] nameIdentifiers =
-                              new NameIdentifier[] {NameIdentifierUtil.ofRole(metalake, role)};
-                          return MetadataAuthzHelper.filterByExpression(
-                                      metalake,
-                                      AuthorizationExpressionConstants
-                                          .loadRoleAuthorizationExpression,
-                                      Entity.EntityType.ROLE,
-                                      nameIdentifiers)
-                                  .length
-                              > 0;
-                        })
-                    .collect(Collectors.toList())
-                    .toArray(new String[0]);
+                MetadataAuthzHelper.filterByExpression(
+                    metalake,
+                    AuthorizationExpressionConstants.LOAD_ROLE_AUTHORIZATION_EXPRESSION,
+                    Entity.EntityType.ROLE,
+                    names,
+                    roleName -> NameIdentifierUtil.ofRole(metalake, roleName));
             return Utils.ok(new NameListResponse(names));
           });
     } catch (Exception e) {
@@ -118,7 +112,7 @@ public class RoleOperations {
   @Timed(name = "get-role." + MetricNames.HTTP_PROCESS_DURATION, absolute = true)
   @ResponseMetered(name = "get-role", absolute = true)
   @AuthorizationExpression(
-      expression = AuthorizationExpressionConstants.loadRoleAuthorizationExpression)
+      expression = AuthorizationExpressionConstants.LOAD_ROLE_AUTHORIZATION_EXPRESSION)
   public Response getRole(
       @PathParam("metalake") @AuthorizationMetadata(type = Entity.EntityType.METALAKE)
           String metalake,
@@ -126,10 +120,12 @@ public class RoleOperations {
     try {
       return Utils.doAs(
           httpRequest,
-          () ->
-              Utils.ok(
-                  new RoleResponse(
-                      DTOConverters.toDTO(accessControlManager.getRole(metalake, role)))));
+          () -> {
+            MetalakeManager.checkMetalakeInUse(metalake);
+            return Utils.ok(
+                new RoleResponse(
+                    DTOConverters.toDTO(accessControlManager.getRole(metalake, role))));
+          });
     } catch (Exception e) {
       return ExceptionHandlers.handleRoleException(OperationType.GET, role, metalake, e);
     }
@@ -150,6 +146,7 @@ public class RoleOperations {
           httpRequest,
           () -> {
             request.validate();
+            MetalakeManager.checkMetalakeInUse(metalake);
             Set<MetadataObject> metadataObjects = Sets.newHashSet();
             for (SecurableObjectDTO object : request.getSecurableObjects()) {
               MetadataObject metadataObject =
@@ -219,6 +216,7 @@ public class RoleOperations {
       return Utils.doAs(
           httpRequest,
           () -> {
+            MetalakeManager.checkMetalakeInUse(metalake);
             boolean deleted = accessControlManager.deleteRole(metalake, role);
             if (!deleted) {
               LOG.warn("Failed to delete role {} under metalake {}", role, metalake);

@@ -57,6 +57,13 @@ public class Privileges {
           MetadataObject.Type.SCHEMA,
           MetadataObject.Type.FILESET);
 
+  private static final Set<MetadataObject.Type> VIEW_SUPPORTED_TYPES =
+      Sets.immutableEnumSet(
+          MetadataObject.Type.METALAKE,
+          MetadataObject.Type.CATALOG,
+          MetadataObject.Type.SCHEMA,
+          MetadataObject.Type.VIEW);
+
   /**
    * Returns the Privilege with allow condition from the string representation.
    *
@@ -127,8 +134,12 @@ public class Privileges {
         return ManageGrants.allow();
 
         //  Model
+      case REGISTER_MODEL:
+        return RegisterModel.allow();
       case CREATE_MODEL:
         return CreateModel.allow();
+      case LINK_MODEL_VERSION:
+        return LinkModelVersion.allow();
       case CREATE_MODEL_VERSION:
         return CreateModelVersion.allow();
       case USE_MODEL:
@@ -155,6 +166,12 @@ public class Privileges {
         // Job
       case RUN_JOB:
         return RunJob.allow();
+
+        // View
+      case CREATE_VIEW:
+        return CreateView.allow();
+      case SELECT_VIEW:
+        return SelectView.allow();
 
       default:
         throw new IllegalArgumentException("Doesn't support the privilege: " + name);
@@ -231,8 +248,12 @@ public class Privileges {
         return ManageGrants.deny();
 
         // Model
+      case REGISTER_MODEL:
+        return RegisterModel.deny();
       case CREATE_MODEL:
         return CreateModel.deny();
+      case LINK_MODEL_VERSION:
+        return LinkModelVersion.deny();
       case CREATE_MODEL_VERSION:
         return CreateModelVersion.deny();
       case USE_MODEL:
@@ -259,6 +280,13 @@ public class Privileges {
         // Job
       case RUN_JOB:
         return RunJob.deny();
+
+        // View
+      case CREATE_VIEW:
+        return CreateView.deny();
+      case SELECT_VIEW:
+        return SelectView.deny();
+
       default:
         throw new IllegalArgumentException("Doesn't support the privilege: " + name);
     }
@@ -839,28 +867,28 @@ public class Privileges {
     }
   }
 
-  /** The privilege to create a model */
-  public static class CreateModel extends GenericPrivilege<CreateModel> {
-    private static final CreateModel ALLOW_INSTANCE =
-        new CreateModel(Condition.ALLOW, Name.CREATE_MODEL);
-    private static final CreateModel DENY_INSTANCE =
-        new CreateModel(Condition.DENY, Name.CREATE_MODEL);
+  /** The privilege to register a model */
+  public static class RegisterModel extends GenericPrivilege<RegisterModel> {
+    private static final RegisterModel ALLOW_INSTANCE =
+        new RegisterModel(Condition.ALLOW, Name.REGISTER_MODEL);
+    private static final RegisterModel DENY_INSTANCE =
+        new RegisterModel(Condition.DENY, Name.REGISTER_MODEL);
 
-    private CreateModel(Condition condition, Name name) {
+    private RegisterModel(Condition condition, Name name) {
       super(condition, name);
     }
 
     /**
      * @return The instance with allow condition of the privilege.
      */
-    public static CreateModel allow() {
+    public static RegisterModel allow() {
       return ALLOW_INSTANCE;
     }
 
     /**
      * @return The instance with deny condition of the privilege.
      */
-    public static CreateModel deny() {
+    public static RegisterModel deny() {
       return DENY_INSTANCE;
     }
 
@@ -899,7 +927,71 @@ public class Privileges {
     }
   }
 
+  /** The privilege to link a model version */
+  public static class LinkModelVersion extends GenericPrivilege<LinkModelVersion> {
+    private static final LinkModelVersion ALLOW_INSTANCE =
+        new LinkModelVersion(Condition.ALLOW, Name.LINK_MODEL_VERSION);
+    private static final LinkModelVersion DENY_INSTANCE =
+        new LinkModelVersion(Condition.DENY, Name.LINK_MODEL_VERSION);
+
+    private LinkModelVersion(Condition condition, Name name) {
+      super(condition, name);
+    }
+
+    /**
+     * @return The instance with allow condition of the privilege.
+     */
+    public static LinkModelVersion allow() {
+      return ALLOW_INSTANCE;
+    }
+
+    /**
+     * @return The instance with deny condition of the privilege.
+     */
+    public static LinkModelVersion deny() {
+      return DENY_INSTANCE;
+    }
+
+    @Override
+    public boolean canBindTo(MetadataObject.Type type) {
+      return MODEL_SUPPORTED_TYPES.contains(type);
+    }
+  }
+
+  /** The privilege to create a model. */
+  @Deprecated
+  public static class CreateModel extends GenericPrivilege<CreateModel> {
+    private static final CreateModel ALLOW_INSTANCE =
+        new CreateModel(Condition.ALLOW, Name.CREATE_MODEL);
+    private static final CreateModel DENY_INSTANCE =
+        new CreateModel(Condition.DENY, Name.CREATE_MODEL);
+
+    private CreateModel(Condition condition, Name name) {
+      super(condition, name);
+    }
+
+    /**
+     * @return The instance with allow condition of the privilege.
+     */
+    public static CreateModel allow() {
+      return ALLOW_INSTANCE;
+    }
+
+    /**
+     * @return The instance with deny condition of the privilege.
+     */
+    public static CreateModel deny() {
+      return DENY_INSTANCE;
+    }
+
+    @Override
+    public boolean canBindTo(MetadataObject.Type type) {
+      return SCHEMA_SUPPORTED_TYPES.contains(type);
+    }
+  }
+
   /** The privilege to create a model version */
+  @Deprecated
   public static class CreateModelVersion extends GenericPrivilege<CreateModelVersion> {
     private static final CreateModelVersion ALLOW_INSTANCE =
         new CreateModelVersion(Condition.ALLOW, Name.CREATE_MODEL_VERSION);
@@ -1163,6 +1255,68 @@ public class Privileges {
     @Override
     public boolean canBindTo(MetadataObject.Type type) {
       return type == MetadataObject.Type.METALAKE || type == MetadataObject.Type.JOB_TEMPLATE;
+    }
+  }
+
+  /** The privilege to create a view. */
+  public static class CreateView extends GenericPrivilege<CreateView> {
+    private static final CreateView ALLOW_INSTANCE =
+        new CreateView(Condition.ALLOW, Name.CREATE_VIEW);
+    private static final CreateView DENY_INSTANCE =
+        new CreateView(Condition.DENY, Name.CREATE_VIEW);
+
+    private CreateView(Condition condition, Name name) {
+      super(condition, name);
+    }
+
+    /**
+     * @return The instance with allow condition of the privilege.
+     */
+    public static CreateView allow() {
+      return ALLOW_INSTANCE;
+    }
+
+    /**
+     * @return The instance with deny condition of the privilege.
+     */
+    public static CreateView deny() {
+      return DENY_INSTANCE;
+    }
+
+    @Override
+    public boolean canBindTo(MetadataObject.Type type) {
+      return SCHEMA_SUPPORTED_TYPES.contains(type);
+    }
+  }
+
+  /** The privilege to select data from a view. */
+  public static class SelectView extends GenericPrivilege<SelectView> {
+    private static final SelectView ALLOW_INSTANCE =
+        new SelectView(Condition.ALLOW, Name.SELECT_VIEW);
+    private static final SelectView DENY_INSTANCE =
+        new SelectView(Condition.DENY, Name.SELECT_VIEW);
+
+    private SelectView(Condition condition, Name name) {
+      super(condition, name);
+    }
+
+    /**
+     * @return The instance with allow condition of the privilege.
+     */
+    public static SelectView allow() {
+      return ALLOW_INSTANCE;
+    }
+
+    /**
+     * @return The instance with deny condition of the privilege.
+     */
+    public static SelectView deny() {
+      return DENY_INSTANCE;
+    }
+
+    @Override
+    public boolean canBindTo(MetadataObject.Type type) {
+      return VIEW_SUPPORTED_TYPES.contains(type);
     }
   }
 }

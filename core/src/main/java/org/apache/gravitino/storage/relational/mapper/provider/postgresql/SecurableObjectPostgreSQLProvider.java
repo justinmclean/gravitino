@@ -28,6 +28,7 @@ import org.apache.gravitino.storage.relational.mapper.ModelMetaMapper;
 import org.apache.gravitino.storage.relational.mapper.SchemaMetaMapper;
 import org.apache.gravitino.storage.relational.mapper.TableMetaMapper;
 import org.apache.gravitino.storage.relational.mapper.TopicMetaMapper;
+import org.apache.gravitino.storage.relational.mapper.ViewMetaMapper;
 import org.apache.gravitino.storage.relational.mapper.provider.base.SecurableObjectBaseSQLProvider;
 import org.apache.gravitino.storage.relational.po.SecurableObjectPO;
 import org.apache.ibatis.annotations.Param;
@@ -39,8 +40,7 @@ public class SecurableObjectPostgreSQLProvider extends SecurableObjectBaseSQLPro
     return "<script>"
         + "UPDATE "
         + SECURABLE_OBJECT_TABLE_NAME
-        + " SET deleted_at = floor(extract(epoch from(current_timestamp -"
-        + " timestamp '1970-01-01 00:00:00')) * 1000)"
+        + " SET deleted_at = CAST(EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000 AS BIGINT)"
         + " WHERE FALSE "
         + "<foreach collection='securableObjects' item='item' separator=' '>"
         + " OR (metadata_object_id = #{item.metadataObjectId} AND"
@@ -53,8 +53,7 @@ public class SecurableObjectPostgreSQLProvider extends SecurableObjectBaseSQLPro
   public String softDeleteSecurableObjectsByRoleId(Long roleId) {
     return "UPDATE "
         + SECURABLE_OBJECT_TABLE_NAME
-        + " SET deleted_at = floor(extract(epoch from(current_timestamp -"
-        + " timestamp '1970-01-01 00:00:00')) * 1000)"
+        + " SET deleted_at = CAST(EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000 AS BIGINT)"
         + " WHERE role_id = #{roleId} AND deleted_at = 0";
   }
 
@@ -62,8 +61,7 @@ public class SecurableObjectPostgreSQLProvider extends SecurableObjectBaseSQLPro
   public String softDeleteSecurableObjectsByMetalakeId(Long metalakeId) {
     return "UPDATE "
         + SECURABLE_OBJECT_TABLE_NAME
-        + " ob SET deleted_at = floor(extract(epoch from(current_timestamp -"
-        + " timestamp '1970-01-01 00:00:00')) * 1000)"
+        + " ob SET deleted_at = CAST(EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000 AS BIGINT)"
         + " WHERE exists (SELECT * FROM "
         + ROLE_TABLE_NAME
         + " ro WHERE ro.metalake_id = #{metalakeId} AND ro.role_id = ob.role_id"
@@ -76,8 +74,7 @@ public class SecurableObjectPostgreSQLProvider extends SecurableObjectBaseSQLPro
       @Param("metadataObjectType") String metadataObjectType) {
     return "UPDATE "
         + SECURABLE_OBJECT_TABLE_NAME
-        + " SET deleted_at = floor(extract(epoch from(current_timestamp -"
-        + " timestamp '1970-01-01 00:00:00')) * 1000)"
+        + " SET deleted_at = CAST(EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000 AS BIGINT)"
         + " WHERE metadata_object_id = #{metadataObjectId} AND deleted_at = 0 AND type = #{metadataObjectType}";
   }
 
@@ -85,8 +82,7 @@ public class SecurableObjectPostgreSQLProvider extends SecurableObjectBaseSQLPro
   public String softDeleteObjectRelsByCatalogId(@Param("catalogId") Long catalogId) {
     return "UPDATE "
         + SECURABLE_OBJECT_TABLE_NAME
-        + " sect SET deleted_at = floor(extract(epoch from(current_timestamp -"
-        + " timestamp '1970-01-01 00:00:00')) * 1000)"
+        + " sect SET deleted_at = CAST(EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000 AS BIGINT)"
         + " WHERE sect.deleted_at = 0 AND EXISTS ("
         + " SELECT ct.catalog_id FROM "
         + CatalogMetaMapper.TABLE_NAME
@@ -117,6 +113,11 @@ public class SecurableObjectPostgreSQLProvider extends SecurableObjectBaseSQLPro
         + ModelMetaMapper.TABLE_NAME
         + " mt WHERE mt.catalog_id = #{catalogId} AND"
         + " mt.model_id = sect.metadata_object_id AND sect.type = 'MODEL'"
+        + " UNION"
+        + " SELECT vt.catalog_id FROM "
+        + ViewMetaMapper.TABLE_NAME
+        + " vt WHERE vt.catalog_id = #{catalogId} AND"
+        + " vt.view_id = sect.metadata_object_id AND sect.type = 'VIEW'"
         + ")";
   }
 
@@ -124,8 +125,7 @@ public class SecurableObjectPostgreSQLProvider extends SecurableObjectBaseSQLPro
   public String softDeleteObjectRelsBySchemaId(@Param("schemaId") Long schemaId) {
     return "UPDATE "
         + SECURABLE_OBJECT_TABLE_NAME
-        + " sect SET deleted_at = floor(extract(epoch from(current_timestamp -"
-        + " timestamp '1970-01-01 00:00:00')) * 1000)"
+        + " sect SET deleted_at = CAST(EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000 AS BIGINT)"
         + " WHERE sect.deleted_at = 0 AND EXISTS ("
         + " SELECT st.schema_id FROM "
         + SchemaMetaMapper.TABLE_NAME
@@ -151,6 +151,11 @@ public class SecurableObjectPostgreSQLProvider extends SecurableObjectBaseSQLPro
         + ModelMetaMapper.TABLE_NAME
         + " mt WHERE mt.schema_id = #{schemaId} AND"
         + " mt.model_id = sect.metadata_object_id AND sect.type = 'MODEL'"
+        + " UNION"
+        + " SELECT vt.schema_id FROM "
+        + ViewMetaMapper.TABLE_NAME
+        + " vt WHERE vt.schema_id = #{schemaId} AND"
+        + " vt.view_id = sect.metadata_object_id AND sect.type = 'VIEW'"
         + ")";
   }
 
@@ -160,7 +165,7 @@ public class SecurableObjectPostgreSQLProvider extends SecurableObjectBaseSQLPro
     return "DELETE FROM "
         + SECURABLE_OBJECT_TABLE_NAME
         + " WHERE id IN (SELECT id FROM "
-        + ROLE_TABLE_NAME
+        + SECURABLE_OBJECT_TABLE_NAME
         + " WHERE deleted_at > 0 AND deleted_at < #{legacyTimeline} LIMIT #{limit})";
   }
 }

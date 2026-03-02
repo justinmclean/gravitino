@@ -30,6 +30,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.lancedb.lance.namespace.LanceNamespaceException;
+import com.lancedb.lance.namespace.model.AlterTableAlterColumnsRequest;
+import com.lancedb.lance.namespace.model.AlterTableAlterColumnsResponse;
+import com.lancedb.lance.namespace.model.AlterTableDropColumnsRequest;
+import com.lancedb.lance.namespace.model.AlterTableDropColumnsResponse;
+import com.lancedb.lance.namespace.model.ColumnAlteration;
 import com.lancedb.lance.namespace.model.CreateEmptyTableRequest;
 import com.lancedb.lance.namespace.model.CreateEmptyTableResponse;
 import com.lancedb.lance.namespace.model.CreateNamespaceRequest;
@@ -48,6 +53,7 @@ import com.lancedb.lance.namespace.model.ListNamespacesResponse;
 import com.lancedb.lance.namespace.model.RegisterTableRequest;
 import com.lancedb.lance.namespace.model.RegisterTableResponse;
 import java.io.IOException;
+import java.util.List;
 import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.client.Entity;
@@ -57,6 +63,7 @@ import javax.ws.rs.core.Response;
 import org.apache.gravitino.exceptions.NoSuchCatalogException;
 import org.apache.gravitino.lance.common.ops.LanceTableOperations;
 import org.apache.gravitino.lance.common.ops.NamespaceWrapper;
+import org.apache.gravitino.lance.common.utils.LanceConstants;
 import org.apache.gravitino.rest.RESTUtils;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -516,7 +523,8 @@ public class TestLanceNamespaceOperations extends JerseyTest {
     // Test that the "register" property is set to "true"
     RegisterTableResponse registerTableResponse = new RegisterTableResponse();
     registerTableResponse.setLocation("/path/to/registered_table");
-    registerTableResponse.setProperties(ImmutableMap.of("key", "value", "register", "true"));
+    registerTableResponse.setProperties(
+        ImmutableMap.of("key", "value", LanceConstants.LANCE_TABLE_REGISTER, "true"));
     when(tableOps.registerTable(any(), any(), any(), any())).thenReturn(registerTableResponse);
 
     RegisterTableRequest tableRequest = new RegisterTableRequest();
@@ -541,7 +549,7 @@ public class TestLanceNamespaceOperations extends JerseyTest {
             Mockito.argThat(
                 props ->
                     props != null
-                        && "true".equals(props.get("register"))
+                        && "true".equals(props.get(LanceConstants.LANCE_TABLE_REGISTER))
                         && "/path/to/registered_table".equals(props.get("location"))
                         && "custom-value".equals(props.get("custom-key"))));
   }
@@ -771,5 +779,137 @@ public class TestLanceNamespaceOperations extends JerseyTest {
     Assertions.assertEquals(
         Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), resp.getStatus());
     Assertions.assertEquals(MediaType.APPLICATION_JSON_TYPE, resp.getMediaType());
+  }
+
+  @Test
+  void testDropColumns() {
+    String tableIds = "catalog.scheme.alter_table_drop_columns";
+    String delimiter = ".";
+
+    // first try to create a table and drop columns from it
+    AlterTableDropColumnsResponse dropColumnsResponse = new AlterTableDropColumnsResponse();
+    dropColumnsResponse.setVersion(2L);
+
+    AlterTableDropColumnsRequest dropColumnsRequest = new AlterTableDropColumnsRequest();
+    dropColumnsRequest.setColumns(List.of("id"));
+    when(tableOps.alterTable(any(), any(), any(AlterTableDropColumnsRequest.class)))
+        .thenReturn(dropColumnsResponse);
+    Response resp =
+        target(String.format("/v1/table/%s/drop_columns", tableIds))
+            .queryParam("delimiter", delimiter)
+            .request(MediaType.APPLICATION_JSON_TYPE)
+            .post(Entity.entity(dropColumnsRequest, MediaType.APPLICATION_JSON_TYPE));
+
+    Assertions.assertEquals(Response.Status.OK.getStatusCode(), resp.getStatus());
+    Assertions.assertEquals(MediaType.APPLICATION_JSON_TYPE, resp.getMediaType());
+    AlterTableDropColumnsResponse response = resp.readEntity(AlterTableDropColumnsResponse.class);
+    Assertions.assertEquals(dropColumnsResponse.getVersion(), response.getVersion());
+
+    // Test empty columns validation
+    AlterTableDropColumnsRequest emptyColumnsRequest = new AlterTableDropColumnsRequest();
+    emptyColumnsRequest.setColumns(List.of());
+    resp =
+        target(String.format("/v1/table/%s/drop_columns", tableIds))
+            .queryParam("delimiter", delimiter)
+            .request(MediaType.APPLICATION_JSON_TYPE)
+            .post(Entity.entity(emptyColumnsRequest, MediaType.APPLICATION_JSON_TYPE));
+    Assertions.assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), resp.getStatus());
+    Assertions.assertEquals(MediaType.APPLICATION_JSON_TYPE, resp.getMediaType());
+    ErrorResponse errorResp = resp.readEntity(ErrorResponse.class);
+    Assertions.assertEquals("Columns to drop cannot be empty.", errorResp.getError());
+    Assertions.assertEquals(IllegalArgumentException.class.getSimpleName(), errorResp.getType());
+
+    // Test blank column names validation
+    AlterTableDropColumnsRequest blankColumnRequest = new AlterTableDropColumnsRequest();
+    blankColumnRequest.setColumns(List.of(" "));
+    resp =
+        target(String.format("/v1/table/%s/drop_columns", tableIds))
+            .queryParam("delimiter", delimiter)
+            .request(MediaType.APPLICATION_JSON_TYPE)
+            .post(Entity.entity(blankColumnRequest, MediaType.APPLICATION_JSON_TYPE));
+    Assertions.assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), resp.getStatus());
+    Assertions.assertEquals(MediaType.APPLICATION_JSON_TYPE, resp.getMediaType());
+    errorResp = resp.readEntity(ErrorResponse.class);
+    Assertions.assertEquals("Columns to drop cannot be blank.", errorResp.getError());
+    Assertions.assertEquals(IllegalArgumentException.class.getSimpleName(), errorResp.getType());
+
+    // Test runtime exception
+    Mockito.reset(tableOps);
+    when(tableOps.alterTable(any(), any(), any(AlterTableDropColumnsRequest.class)))
+        .thenThrow(new RuntimeException("Runtime exception"));
+    resp =
+        target(String.format("/v1/table/%s/drop_columns", tableIds))
+            .queryParam("delimiter", delimiter)
+            .request(MediaType.APPLICATION_JSON_TYPE)
+            .post(Entity.entity(dropColumnsRequest, MediaType.APPLICATION_JSON_TYPE));
+    Assertions.assertEquals(
+        Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), resp.getStatus());
+    Assertions.assertEquals(MediaType.APPLICATION_JSON_TYPE, resp.getMediaType());
+
+    // Test No such table exception
+    Mockito.reset(tableOps);
+    when(tableOps.alterTable(any(), any(), any(AlterTableDropColumnsRequest.class)))
+        .thenThrow(
+            LanceNamespaceException.notFound(
+                "Table not found", "NoSuchTableException", tableIds, ""));
+    resp =
+        target(String.format("/v1/table/%s/drop_columns", tableIds))
+            .queryParam("delimiter", delimiter)
+            .request(MediaType.APPLICATION_JSON_TYPE)
+            .post(Entity.entity(dropColumnsRequest, MediaType.APPLICATION_JSON_TYPE));
+    Assertions.assertEquals(Response.Status.NOT_FOUND.getStatusCode(), resp.getStatus());
+  }
+
+  @Test
+  void testAlterColumns() {
+    String tableIds = "catalog.scheme.alter_table_alter_columns";
+    String delimiter = ".";
+
+    AlterTableAlterColumnsResponse alterColumnsResponse = new AlterTableAlterColumnsResponse();
+    alterColumnsResponse.setVersion(3L);
+
+    AlterTableAlterColumnsRequest alterColumnsRequest = new AlterTableAlterColumnsRequest();
+    alterColumnsRequest.setId(List.of("catalog", "scheme", "alter_table_alter_columns"));
+    ColumnAlteration columnAlteration = new ColumnAlteration();
+    columnAlteration.setColumn("col1");
+    columnAlteration.setRename("col1_new");
+    alterColumnsRequest.setAlterations(List.of(columnAlteration));
+
+    when(tableOps.alterTable(any(), any(), any(AlterTableAlterColumnsRequest.class)))
+        .thenReturn(alterColumnsResponse);
+    Response resp =
+        target(String.format("/v1/table/%s/alter_columns", tableIds))
+            .queryParam("delimiter", delimiter)
+            .request(MediaType.APPLICATION_JSON_TYPE)
+            .post(Entity.entity(alterColumnsRequest, MediaType.APPLICATION_JSON_TYPE));
+
+    Assertions.assertEquals(Response.Status.OK.getStatusCode(), resp.getStatus());
+    Assertions.assertEquals(MediaType.APPLICATION_JSON_TYPE, resp.getMediaType());
+    AlterTableAlterColumnsResponse response = resp.readEntity(AlterTableAlterColumnsResponse.class);
+    Assertions.assertEquals(alterColumnsResponse.getVersion(), response.getVersion());
+
+    Mockito.reset(tableOps);
+    when(tableOps.alterTable(any(), any(), any(AlterTableAlterColumnsRequest.class)))
+        .thenThrow(new RuntimeException("Runtime exception"));
+    resp =
+        target(String.format("/v1/table/%s/alter_columns", tableIds))
+            .queryParam("delimiter", delimiter)
+            .request(MediaType.APPLICATION_JSON_TYPE)
+            .post(Entity.entity(alterColumnsRequest, MediaType.APPLICATION_JSON_TYPE));
+    Assertions.assertEquals(
+        Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), resp.getStatus());
+    Assertions.assertEquals(MediaType.APPLICATION_JSON_TYPE, resp.getMediaType());
+
+    Mockito.reset(tableOps);
+    when(tableOps.alterTable(any(), any(), any(AlterTableAlterColumnsRequest.class)))
+        .thenThrow(
+            LanceNamespaceException.notFound(
+                "Table not found", "NoSuchTableException", tableIds, ""));
+    resp =
+        target(String.format("/v1/table/%s/alter_columns", tableIds))
+            .queryParam("delimiter", delimiter)
+            .request(MediaType.APPLICATION_JSON_TYPE)
+            .post(Entity.entity(alterColumnsRequest, MediaType.APPLICATION_JSON_TYPE));
+    Assertions.assertEquals(Response.Status.NOT_FOUND.getStatusCode(), resp.getStatus());
   }
 }

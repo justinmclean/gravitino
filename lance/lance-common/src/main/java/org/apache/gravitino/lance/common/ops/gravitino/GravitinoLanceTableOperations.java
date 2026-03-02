@@ -20,14 +20,21 @@
 package org.apache.gravitino.lance.common.ops.gravitino;
 
 import static org.apache.gravitino.lance.common.ops.gravitino.LanceDataTypeConverter.CONVERTER;
+import static org.apache.gravitino.lance.common.utils.LanceConstants.LANCE_CREATION_MODE;
 import static org.apache.gravitino.lance.common.utils.LanceConstants.LANCE_LOCATION;
+import static org.apache.gravitino.lance.common.utils.LanceConstants.LANCE_TABLE_CREATE_EMPTY;
+import static org.apache.gravitino.lance.common.utils.LanceConstants.LANCE_TABLE_FORMAT;
+import static org.apache.gravitino.lance.common.utils.LanceConstants.LANCE_TABLE_VERSION;
 import static org.apache.gravitino.rel.Column.DEFAULT_VALUE_NOT_SET;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.lancedb.lance.namespace.LanceNamespaceException;
 import com.lancedb.lance.namespace.ObjectIdentifier;
+import com.lancedb.lance.namespace.model.AlterTableAlterColumnsRequest;
+import com.lancedb.lance.namespace.model.AlterTableDropColumnsRequest;
 import com.lancedb.lance.namespace.model.CreateEmptyTableResponse;
 import com.lancedb.lance.namespace.model.CreateTableRequest;
 import com.lancedb.lance.namespace.model.CreateTableRequest.ModeEnum;
@@ -51,19 +58,27 @@ import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.gravitino.Catalog;
 import org.apache.gravitino.NameIdentifier;
 import org.apache.gravitino.exceptions.NoSuchTableException;
-import org.apache.gravitino.exceptions.TableAlreadyExistsException;
 import org.apache.gravitino.lance.common.ops.LanceTableOperations;
+import org.apache.gravitino.lance.common.ops.gravitino.GravitinoLanceTableAlterHandler.AlterColumnsGravitinoLance;
+import org.apache.gravitino.lance.common.ops.gravitino.GravitinoLanceTableAlterHandler.DropColumns;
 import org.apache.gravitino.lance.common.utils.ArrowUtils;
 import org.apache.gravitino.lance.common.utils.LancePropertiesUtils;
 import org.apache.gravitino.rel.Column;
 import org.apache.gravitino.rel.Table;
+import org.apache.gravitino.rel.TableChange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class GravitinoLanceTableOperations implements LanceTableOperations {
-  private static final Logger LOG = LoggerFactory.getLogger(GravitinoLanceTableOperations.class);
+
+  public static final Logger LOG = LoggerFactory.getLogger(GravitinoLanceTableOperations.class);
 
   private final GravitinoLanceNamespaceWrapper namespaceWrapper;
+
+  private static final Map<Class<?>, GravitinoLanceTableAlterHandler<?, ?>> ALTER_HANDLERS =
+      Map.of(
+          AlterTableDropColumnsRequest.class, new DropColumns(),
+          AlterTableAlterColumnsRequest.class, new AlterColumnsGravitinoLance());
 
   public GravitinoLanceTableOperations(GravitinoLanceNamespaceWrapper namespaceWrapper) {
     this.namespaceWrapper = namespaceWrapper;
@@ -92,7 +107,10 @@ public class GravitinoLanceTableOperations implements LanceTableOperations {
     response.setProperties(table.properties());
     response.setLocation(table.properties().get(LANCE_LOCATION));
     response.setSchema(toJsonArrowSchema(table.columns()));
-    response.setVersion(null);
+    response.setVersion(
+        Optional.ofNullable(table.properties().get(LANCE_TABLE_VERSION))
+            .map(Long::valueOf)
+            .orElse(null));
     response.setStorageOptions(LancePropertiesUtils.getLanceStorageOptions(table.properties()));
     return response;
   }
@@ -128,43 +146,18 @@ public class GravitinoLanceTableOperations implements LanceTableOperations {
       createTableProperties.put(LANCE_LOCATION, tableLocation);
     }
     // The format is defined in GenericLakehouseCatalog
-    createTableProperties.put(Table.PROPERTY_TABLE_FORMAT, "lance");
+    createTableProperties.put(Table.PROPERTY_TABLE_FORMAT, LANCE_TABLE_FORMAT);
     createTableProperties.put(Table.PROPERTY_EXTERNAL, "true");
 
-    Table t;
-    try {
-      t =
-          catalog
-              .asTableCatalog()
-              .createTable(
-                  tableIdentifier, columns.toArray(new Column[0]), null, createTableProperties);
-    } catch (TableAlreadyExistsException exception) {
-      if (mode == CreateTableRequest.ModeEnum.CREATE) {
-        throw LanceNamespaceException.conflict(
-            "Table already exists: " + tableId,
-            TableAlreadyExistsException.class.getSimpleName(),
-            tableId,
-            CommonUtil.formatCurrentStackTrace());
-      } else if (mode == CreateTableRequest.ModeEnum.OVERWRITE) {
-        LOG.info("Overwriting existing table: {}", tableId);
-        catalog.asTableCatalog().purgeTable(tableIdentifier);
+    // Pass creation mode as property to delegate handling to LanceTableOperations
+    createTableProperties.put(LANCE_CREATION_MODE, mode.name());
 
-        t =
-            catalog
-                .asTableCatalog()
-                .createTable(
-                    tableIdentifier, columns.toArray(new Column[0]), null, createTableProperties);
-      } else { // EXIST_OK
-        CreateTableResponse response = new CreateTableResponse();
-        Table existingTable = catalog.asTableCatalog().loadTable(tableIdentifier);
-        response.setProperties(existingTable.properties());
-        response.setLocation(existingTable.properties().get(LANCE_LOCATION));
-        response.setVersion(null);
-        response.setStorageOptions(
-            LancePropertiesUtils.getLanceStorageOptions(existingTable.properties()));
-        return response;
-      }
-    }
+    // Single call - mode is handled server-side
+    Table t =
+        catalog
+            .asTableCatalog()
+            .createTable(
+                tableIdentifier, columns.toArray(new Column[0]), null, createTableProperties);
 
     CreateTableResponse response = new CreateTableResponse();
     response.setProperties(t.properties());
@@ -172,7 +165,10 @@ public class GravitinoLanceTableOperations implements LanceTableOperations {
     // Extract storage options from table properties. All storage options stores in table
     // properties.
     response.setStorageOptions(LancePropertiesUtils.getLanceStorageOptions(t.properties()));
-    response.setVersion(null);
+    response.setVersion(
+        Optional.ofNullable(t.properties().get(LANCE_TABLE_VERSION))
+            .map(Long::valueOf)
+            .orElse(null));
     response.setLocation(t.properties().get(LANCE_LOCATION));
     response.setProperties(t.properties());
     return response;
@@ -181,8 +177,16 @@ public class GravitinoLanceTableOperations implements LanceTableOperations {
   @Override
   public CreateEmptyTableResponse createEmptyTable(
       String tableId, String delimiter, String tableLocation, Map<String, String> tableProperties) {
+    // Empty table creation only supports CREATE mode (not EXIST_OK or OVERWRITE).
+    ImmutableMap<String, String> props =
+        ImmutableMap.<String, String>builder()
+            .putAll(tableProperties)
+            .put(LANCE_TABLE_CREATE_EMPTY, "true")
+            .put(Table.PROPERTY_EXTERNAL, "true")
+            .build();
+
     CreateTableResponse response =
-        createTable(tableId, ModeEnum.CREATE, delimiter, tableLocation, tableProperties, null);
+        createTable(tableId, ModeEnum.CREATE, delimiter, tableLocation, props, null);
     CreateEmptyTableResponse emptyTableResponse = new CreateEmptyTableResponse();
     emptyTableResponse.setProperties(response.getProperties());
     emptyTableResponse.setLocation(response.getLocation());
@@ -206,30 +210,17 @@ public class GravitinoLanceTableOperations implements LanceTableOperations {
         NameIdentifier.of(nsId.levelAtListPos(1), nsId.levelAtListPos(2));
 
     Map<String, String> copiedTableProperties = Maps.newHashMap(tableProperties);
-    copiedTableProperties.put("format", "lance");
-    Table t = null;
-    try {
-      t =
-          catalog
-              .asTableCatalog()
-              .createTable(tableIdentifier, new Column[] {}, null, copiedTableProperties);
-    } catch (TableAlreadyExistsException exception) {
-      if (mode == RegisterTableRequest.ModeEnum.CREATE) {
-        throw LanceNamespaceException.conflict(
-            "Table already exists: " + tableId,
-            TableAlreadyExistsException.class.getSimpleName(),
-            tableId,
-            CommonUtil.formatCurrentStackTrace());
-      } else if (mode == RegisterTableRequest.ModeEnum.OVERWRITE) {
-        LOG.info("Overwriting existing table: {}", tableId);
-        catalog.asTableCatalog().dropTable(tableIdentifier);
+    copiedTableProperties.put(Table.PROPERTY_TABLE_FORMAT, LANCE_TABLE_FORMAT);
+    copiedTableProperties.put(Table.PROPERTY_EXTERNAL, "true");
 
-        t =
-            catalog
-                .asTableCatalog()
-                .createTable(tableIdentifier, new Column[] {}, null, copiedTableProperties);
-      }
-    }
+    // Pass creation mode as property to delegate handling to LanceTableOperations
+    copiedTableProperties.put(LANCE_CREATION_MODE, mode.name());
+
+    // Single call - mode is handled server-side
+    Table t =
+        catalog
+            .asTableCatalog()
+            .createTable(tableIdentifier, new Column[] {}, null, copiedTableProperties);
 
     RegisterTableResponse response = new RegisterTableResponse();
     response.setProperties(t.properties());
@@ -322,6 +313,35 @@ public class GravitinoLanceTableOperations implements LanceTableOperations {
     response.setTransactionId(List.of());
 
     return response;
+  }
+
+  @Override
+  public Object alterTable(String tableId, String delimiter, Object request) {
+    ObjectIdentifier nsId = ObjectIdentifier.of(tableId, Pattern.quote(delimiter));
+    Preconditions.checkArgument(
+        nsId.levels() == 3, "Expected at 3-level namespace but got: %s", nsId.levels());
+
+    String catalogName = nsId.levelAtListPos(0);
+    Catalog catalog = namespaceWrapper.loadAndValidateLakehouseCatalog(catalogName);
+    NameIdentifier tableIdentifier =
+        NameIdentifier.of(nsId.levelAtListPos(1), nsId.levelAtListPos(2));
+
+    GravitinoLanceTableAlterHandler<Object, Object> handler = getHandler(request.getClass());
+    if (handler == null) {
+      throw new IllegalArgumentException(
+          "Unsupported alter table request type: " + request.getClass().getName());
+    }
+    TableChange[] changes = handler.buildGravitinoTableChange(request);
+
+    Table table = catalog.asTableCatalog().alterTable(tableIdentifier, changes);
+
+    return handler.handle(table, request);
+  }
+
+  @SuppressWarnings("unchecked")
+  private static <REQUEST, RESPONSE> GravitinoLanceTableAlterHandler<REQUEST, RESPONSE> getHandler(
+      Class<?> requestClass) {
+    return (GravitinoLanceTableAlterHandler<REQUEST, RESPONSE>) ALTER_HANDLERS.get(requestClass);
   }
 
   private List<Column> extractColumns(org.apache.arrow.vector.types.pojo.Schema arrowSchema) {

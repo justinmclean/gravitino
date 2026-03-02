@@ -26,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
+import org.apache.commons.io.FileUtils;
 import org.apache.gravitino.Catalog;
 import org.apache.gravitino.NameIdentifier;
 import org.apache.gravitino.Namespace;
@@ -40,7 +41,6 @@ import org.apache.gravitino.rel.TableCatalog;
 import org.junit.jupiter.api.Assertions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 
 public class TrinoQueryITBase {
   private static final Logger LOG = LoggerFactory.getLogger(TrinoQueryITBase.class);
@@ -70,12 +70,18 @@ public class TrinoQueryITBase {
 
   private static BaseIT baseIT;
 
-  protected int trinoWorkerNum = 0;
+  protected Integer trinoWorkerNum;
+
+  protected Integer trinoVersion;
+
+  protected String trinoConnectorDir;
 
   public TrinoQueryITBase() {}
 
-  public TrinoQueryITBase(int trinoWorkerNum) {
+  public TrinoQueryITBase(Integer trinoWorkerNum, Integer trinoVersion, String trinoConnectorDir) {
     this.trinoWorkerNum = trinoWorkerNum;
+    this.trinoVersion = trinoVersion;
+    this.trinoConnectorDir = trinoConnectorDir;
   }
 
   private void setEnv() throws Exception {
@@ -104,7 +110,9 @@ public class TrinoQueryITBase {
           baseIT.getGravitinoServerPort(),
           hiveRuntimeVersion,
           isTrinoConnectorTest,
-          trinoWorkerNum);
+          trinoWorkerNum,
+          trinoVersion,
+          trinoConnectorDir);
 
       trinoUri = trinoITContainers.getTrinoUri();
       hiveMetastoreUri = trinoITContainers.getHiveMetastoreUri();
@@ -142,7 +150,7 @@ public class TrinoQueryITBase {
     try {
       if (autoStart) {
         if (trinoITContainers != null) trinoITContainers.shutdown();
-        baseIT.stopIntegrationTest();
+        if (baseIT != null) baseIT.stopIntegrationTest();
       }
     } catch (Exception e) {
       LOG.error("Error in cleanup", e);
@@ -269,11 +277,18 @@ public class TrinoQueryITBase {
     }
   }
 
-  public static String[] listDirectory(String dirname) throws Exception {
+  public static String[] listTestSetDirectory(String dirname) throws Exception {
     File dir = new File(dirname);
-    if (dir.exists()) {
-      return dir.list();
+    if (!dir.exists()) {
+      throw new Exception("Test queries directory " + dirname + " does not exist");
     }
-    throw new Exception("Test queries directory " + dirname + " does not exist");
+    if (!dir.isDirectory()) {
+      throw new Exception("Path " + dirname + " is not a directory");
+    }
+    String[] files = dir.list();
+    if (files == null) {
+      throw new Exception("Failed to list directory " + dirname + " (I/O error)");
+    }
+    return files;
   }
 }

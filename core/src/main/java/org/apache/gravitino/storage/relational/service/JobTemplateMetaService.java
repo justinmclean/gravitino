@@ -204,4 +204,39 @@ public class JobTemplateMetaService {
     }
     return jobTemplatePO;
   }
+
+  public long getJobTemplateIdByMetalakeIdAndName(long metalakeId, String name) {
+    Long jobTemplateId =
+        SessionUtils.getWithoutCommit(
+            JobTemplateMetaMapper.class,
+            mapper -> mapper.selectJobTemplateIdByMetalakeAndName(metalakeId, name));
+
+    if (jobTemplateId == null) {
+      throw new NoSuchEntityException(
+          NoSuchEntityException.NO_SUCH_ENTITY_MESSAGE,
+          Entity.EntityType.JOB_TEMPLATE.name().toLowerCase(Locale.ROOT),
+          name);
+    }
+    return jobTemplateId;
+  }
+
+  @Monitored(
+      metricsSource = GRAVITINO_RELATIONAL_STORE_METRIC_NAME,
+      baseMetricName = "batchGetJobTemplateByIdentifier")
+  public List<JobTemplateEntity> batchGetJobTemplateByIdentifier(List<NameIdentifier> identifiers) {
+    NameIdentifier firstIdent = identifiers.get(0);
+    String metalakeName = firstIdent.namespace().level(0);
+    List<String> jobTemplateNames =
+        identifiers.stream().map(NameIdentifier::name).collect(Collectors.toList());
+
+    return SessionUtils.doWithCommitAndFetchResult(
+        JobTemplateMetaMapper.class,
+        mapper -> {
+          List<JobTemplatePO> jobTemplatePOs =
+              mapper.batchSelectJobTemplateByIdentifier(metalakeName, jobTemplateNames);
+          return jobTemplatePOs.stream()
+              .map(po -> JobTemplatePO.fromJobTemplatePO(po, firstIdent.namespace()))
+              .collect(Collectors.toList());
+        });
+  }
 }

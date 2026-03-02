@@ -35,11 +35,13 @@ import org.apache.gravitino.server.authorization.expression.AuthorizationExpress
 import org.apache.iceberg.catalog.Namespace;
 import org.apache.iceberg.catalog.TableIdentifier;
 import org.apache.iceberg.rest.requests.CreateTableRequest;
+import org.apache.iceberg.rest.requests.PlanTableScanRequest;
 import org.apache.iceberg.rest.requests.RenameTableRequest;
 import org.apache.iceberg.rest.requests.UpdateTableRequest;
 import org.apache.iceberg.rest.responses.ListTablesResponse;
 import org.apache.iceberg.rest.responses.LoadCredentialsResponse;
 import org.apache.iceberg.rest.responses.LoadTableResponse;
+import org.apache.iceberg.rest.responses.PlanTableScanResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,15 +72,21 @@ public class IcebergTableOperationExecutor implements IcebergTableOperationDispa
             authenticatedUser);
 
         // CreateTableRequest is immutable, so we need to rebuild it with modified properties
-        createTableRequest =
+        CreateTableRequest.Builder builder =
             CreateTableRequest.builder()
                 .withName(createTableRequest.name())
                 .withSchema(createTableRequest.schema())
                 .withPartitionSpec(createTableRequest.spec())
                 .withWriteOrder(createTableRequest.writeOrder())
                 .withLocation(createTableRequest.location())
-                .setProperties(properties)
-                .build();
+                .setProperties(properties);
+
+        // Preserve the stageCreate flag when rebuilding the request
+        if (createTableRequest.stageCreate()) {
+          builder.stageCreate();
+        }
+
+        createTableRequest = builder.build();
       }
     }
 
@@ -164,8 +172,18 @@ public class IcebergTableOperationExecutor implements IcebergTableOperationDispa
         MetadataAuthzHelper.checkAccess(
             identifier,
             Entity.EntityType.TABLE,
-            AuthorizationExpressionConstants.filterModifyTableAuthorizationExpression);
+            AuthorizationExpressionConstants.FILTER_MODIFY_TABLE_AUTHORIZATION_EXPRESSION);
 
     return writable ? CredentialPrivilege.WRITE : CredentialPrivilege.READ;
+  }
+
+  @Override
+  public PlanTableScanResponse planTableScan(
+      IcebergRequestContext context,
+      TableIdentifier tableIdentifier,
+      PlanTableScanRequest scanRequest) {
+    return icebergCatalogWrapperManager
+        .getCatalogWrapper(context.catalogName())
+        .planTableScan(tableIdentifier, scanRequest);
   }
 }

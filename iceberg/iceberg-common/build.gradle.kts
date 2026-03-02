@@ -27,6 +27,9 @@ plugins {
 dependencies {
   implementation(project(":api"))
   implementation(project(":catalogs:catalog-common"))
+  implementation(project(":catalogs:hadoop-common")) {
+    exclude("*")
+  }
   implementation(project(":core")) {
     exclude("*")
   }
@@ -39,7 +42,11 @@ dependencies {
     exclude("org.jline")
   }
   implementation(libs.caffeine)
-  implementation(libs.cglib)
+  implementation(libs.cglib) {
+    // The version of build-in asm is 7.1, which is not compatible with Java 17 well
+    exclude("org.ow2.asm")
+  }
+  implementation(libs.asm)
   implementation(libs.commons.lang3)
   implementation(libs.guava)
   implementation(libs.iceberg.aliyun)

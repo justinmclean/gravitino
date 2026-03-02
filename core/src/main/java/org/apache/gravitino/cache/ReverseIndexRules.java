@@ -30,6 +30,7 @@ import org.apache.gravitino.meta.PolicyEntity;
 import org.apache.gravitino.meta.RoleEntity;
 import org.apache.gravitino.meta.TagEntity;
 import org.apache.gravitino.meta.UserEntity;
+import org.apache.gravitino.utils.MetadataObjectUtil;
 import org.apache.gravitino.utils.NamespaceUtil;
 
 /**
@@ -103,67 +104,10 @@ public class ReverseIndexRules {
               .securableObjects()
               .forEach(
                   securableObject -> {
-                    Namespace namespace = Namespace.empty();
-                    Entity.EntityType entityType = Entity.EntityType.METALAKE;
-                    switch (securableObject.type()) {
-                      case METALAKE:
-                        entityType = Entity.EntityType.METALAKE;
-                        namespace = NamespaceUtil.ofMetalake();
-                        break;
-                      case CATALOG:
-                        entityType = Entity.EntityType.CATALOG;
-                        namespace = NamespaceUtil.ofCatalog(roleEntity.namespace().level(0));
-                        break;
-                      case SCHEMA:
-                        entityType = Entity.EntityType.SCHEMA;
-                        Namespace nsSchema = Namespace.fromString(securableObject.parent());
-                        namespace =
-                            NamespaceUtil.ofSchema(
-                                roleEntity.namespace().level(0), nsSchema.level(0));
-                        break;
-                      case TABLE:
-                        entityType = Entity.EntityType.TABLE;
-                        Namespace nsTable = Namespace.fromString(securableObject.parent());
-                        namespace =
-                            NamespaceUtil.ofTable(
-                                roleEntity.namespace().level(0),
-                                nsTable.level(0),
-                                nsTable.level(1));
-                        break;
-                      case TOPIC:
-                        entityType = Entity.EntityType.TOPIC;
-                        Namespace nsTopic = Namespace.fromString(securableObject.parent());
-                        namespace =
-                            NamespaceUtil.ofTopic(
-                                roleEntity.namespace().level(0),
-                                nsTopic.level(0),
-                                nsTopic.level(1));
-                        break;
-                      case MODEL:
-                        entityType = Entity.EntityType.MODEL;
-                        Namespace nsModel = Namespace.fromString(securableObject.parent());
-                        namespace =
-                            NamespaceUtil.ofModel(
-                                roleEntity.namespace().level(0),
-                                nsModel.level(0),
-                                nsModel.level(1));
-                        break;
-                      case FILESET:
-                        entityType = Entity.EntityType.FILESET;
-                        Namespace nsFileset = Namespace.fromString(securableObject.parent());
-                        namespace =
-                            NamespaceUtil.ofFileset(
-                                roleEntity.namespace().level(0),
-                                nsFileset.level(0),
-                                nsFileset.level(1));
-                        break;
-                      default:
-                        throw new UnsupportedOperationException(
-                            "Don't support securable object type: " + securableObject.type());
-                    }
-                    Namespace securableObjectNamespace = Namespace.of(namespace.levels());
                     NameIdentifier securableObjectIdent =
-                        NameIdentifier.of(securableObjectNamespace, securableObject.name());
+                        MetadataObjectUtil.toEntityIdent(
+                            roleEntity.namespace().level(0), securableObject);
+                    EntityType entityType = MetadataObjectUtil.toEntityType(securableObject.type());
                     reverseIndexCache.put(securableObjectIdent, entityType, key);
                   });
         }
@@ -171,12 +115,16 @@ public class ReverseIndexRules {
 
   // Keep policies/tags to objects reverse index for metadata objects, so the key are objects and
   // the values are policies/tags.
+  // Only processes GenericEntity objects without namespace (metadata objects from tag/policy
+  // queries).
+  // Entities with namespace (views, tables) are skipped.
   public static final ReverseIndexCache.ReverseIndexRule GENERIC_METADATA_OBJECT_REVERSE_RULE =
       (entity, key, reverseIndexCache) -> {
-        // Name in GenericEntity contains no metalake.
         GenericEntity genericEntity = (GenericEntity) entity;
         EntityType type = entity.type();
-        if (genericEntity.name() != null) {
+        if (genericEntity.name() != null
+            && (genericEntity.namespace() == null || genericEntity.namespace().isEmpty())) {
+          // Name contains catalog.schema.object format without metalake, so prepend it.
           String[] levels = genericEntity.name().split("\\.");
           String metalakeName = key.identifier().namespace().levels()[0];
           NameIdentifier objectNameIdentifier =
